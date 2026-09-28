@@ -1,0 +1,47 @@
+# Environment
+.env
+venv/
+venv_old_py39/
+env/
+ENV/
+.venv
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Data & Models
+data/vector_store/*  # Will be generated on Render during deployment
+# data/raw_documents/*  # KEEP PDFs for Render ingestion
+data/processed/*
+*.pkl
+*.bin
+*.index
+vector_store_backup.tar.gz
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Distribution
+dist/
+build/
+*.egg-info/

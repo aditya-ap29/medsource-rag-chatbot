@@ -1,0 +1,80 @@
+[
+  {
+    "doc_id": "be51ad407e90",
+    "content": "Vitamin D deficiency is a common condition that can lead to various health problems. Common symptoms include fatigue, bone pain, muscle weakness, and mood changes such as depression. In children, severe deficiency can cause rickets, leading to soft bones and skeletal deformities. In adults, it can lead to osteomalacia, causing bone pain and muscle weakness. Risk factors include limited sun exposure, dark skin, older age, obesity, and certain medical conditions. Treatment typically involves vitamin D supplementation and increased sun exposure.",
+    "title": "Vitamin D Deficiency: Symptoms and Treatment",
+    "source": "Harrison's Internal Medicine",
+    "year": "2018",
+    "url": "https://www.ncbi.nlm.nih.gov/books/NBK532266/",
+    "metadata": {
+      "category": "nutrition",
+      "severity": "common"
+    },
+    "processed_at": "2026-09-14T06:35:08.096799"
+  },
+  {
+    "doc_id": "cd91efed701f",
+    "content": "Anemia is a condition in which you lack enough healthy red blood cells to carry adequate oxygen to your body's tissues. Common symptoms include fatigue, weakness, pale or yellowish skin, irregular heartbeats, shortness of breath, dizziness or lightheadedness, chest pain, cold hands and feet, and headaches. There are many types of anemia, each with different causes. Iron deficiency anemia is the most common type worldwide. Treatment depends on the type and cause but may include dietary changes, supplements, or medications.",
+    "title": "Anemia: Types, Symptoms, and Treatment Options",
+    "source": "Mayo Clinic Medical Reference",
+    "year": "2022",
+    "url": "https://www.mayoclinic.org/diseases-conditions/anemia",
+    "metadata": {
+      "category": "hematology",
+      "severity": "common"
+    },
+    "processed_at": "2026-09-14T06:35:08.097243"
+  },
+  {
+    "doc_id": "87d15e2619d1",
+    "content": "Diabetes mellitus is a metabolic disease that causes high blood sugar. Type 1 diabetes is an autoimmune condition where the body doesn't produce insulin. Type 2 diabetes occurs when the body becomes resistant to insulin or doesn't produce enough. Common symptoms include increased thirst, frequent urination, extreme hunger, unexplained weight loss, fatigue, blurred vision, slow-healing sores, and frequent infections. Management includes blood sugar monitoring, insulin or medication, healthy eating, and regular exercise.",
+    "title": "Diabetes Mellitus: Overview and Management",
+    "source": "World Health Organization Guidelines",
+    "year": "2021",
+    "url": "https://www.who.int/health-topics/diabetes",
+    "metadata": {
+      "category": "endocrinology",
+      "severity": "chronic"
+    },
+    "processed_at": "2026-09-14T06:35:08.097272"
+  },
+  {
+    "doc_id": "ca05278ffe37",
+    "content": "Hypertension, or high blood pressure, is a common condition in which the force of blood against artery walls is too high. It often has no symptoms but can lead to serious health problems including heart disease, stroke, and kidney disease. Normal blood pressure is less than 120/80 mmHg. Hypertension is diagnosed when readings consistently exceed 130/80 mmHg. Risk factors include age, family history, obesity, sedentary lifestyle, high salt intake, and excessive alcohol consumption. Treatment includes lifestyle modifications and antihypertensive medications as prescribed by healthcare providers.",
+    "title": "Hypertension: Definition, Risk Factors, and Management",
+    "source": "American Heart Association Guidelines",
+    "year": "2020",
+    "url": "https://www.heart.org/en/health-topics/high-blood-pressure",
+    "metadata": {
+      "category": "cardiology",
+      "severity": "common"
+    },
+    "processed_at": "2026-09-14T06:35:08.097283"
+  },
+  {
+    "doc_id": "b41a5f9488b1",
+    "content": "Migraine is a neurological condition characterized by intense, debilitating headaches. Symptoms include throbbing pain, usually on one side of the head, nausea, vomiting, and extreme sensitivity to light and sound. Some people experience aura before migraines, which can include visual disturbances, tingling sensations, or difficulty speaking. Triggers vary but may include stress, certain foods, hormonal changes, and sleep pattern changes. Treatment options include pain-relieving medications, preventive medications, and lifestyle modifications.",
+    "title": "Migraine Headaches: Symptoms, Triggers, and Treatment",
+    "source": "NIH National Institute of Neurological Disorders",
+    "year": "2023",
+    "url": "https://www.ninds.nih.gov/migraine",
+    "metadata": {
+      "category": "neurology",
+      "severity": "moderate"
+    },
+    "processed_at": "2026-09-14T06:35:08.097294"
+  },
+  {
+    "doc_id": "7e421523696f",
+    "content": "Asthma is a chronic respiratory condition that inflames and narrows the airways. Common symptoms include shortness of breath, chest tightness, wheezing, and coughing, especially at night or early morning. Asthma attacks can be triggered by allergens, cold air, exercise, stress, or respiratory infections. The condition varies from person to person in terms of severity and frequency of symptoms. Management includes avoiding triggers, using inhaled corticosteroids for long-term control, and rescue inhalers for quick relief. Regular monitoring with a peak flow meter can help track lung function.",
+    "title": "Asthma: Pathophysiology and Clinical Management",
+    "source": "Journal of Respiratory Medicine",
+    "year": "2022",
+    "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9876543/",
+    "metadata": {
+      "category": "pulmonology",
+      "severity": "chronic"
+    },
+    "processed_at": "2026-09-14T06:35:08.097304"
+  }
+]
