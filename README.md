@@ -879,7 +879,7 @@ docker run -p 8000:8000 --env-file .env MedSource-rag
 3. Add environment variables (OPENAI_API_KEY)
 4. Deploy!
 
-Your API will be live at: `https://your-app.onrender.com`
+
 
 ## 📊 Performance Benchmarks
 
@@ -888,9 +888,7 @@ Your API will be live at: `https://your-app.onrender.com`
 - **RAGAS Overall Score**: 0.85+
 - **Citation Coverage**: 98%
 
-## 🤝 Team
 
-Built for **Hack-A-Cure 2025** by [Your Team Name]
 
 ## 📄 License
 
@@ -904,7 +902,7 @@ MIT License - See LICENSE file for details
 
 - Medical data sources: PubMed, NIH, WHO
 - Open-source libraries: Hugging Face, LangChain community
-- Hack-A-Cure organizers
+
 
 ---
 
