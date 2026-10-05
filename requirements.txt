@@ -35,3 +35,5 @@ python-multipart>=0.0.6
 
 # Streamlit UI
 streamlit>=1.38.0
+langchain-text-splitters>=0.3.0
+slowapi>=0.1.9
