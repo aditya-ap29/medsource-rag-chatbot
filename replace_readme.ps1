@@ -1,4 +1,5 @@
-﻿# MedSource â€” AI-Powered Medical RAG Chatbot
+$content = @'
+# MedSource — AI-Powered Medical RAG Chatbot
 
 A Retrieval-Augmented Generation (RAG) system that answers medical questions using real, citable research literature instead of relying purely on a language model's internal memory. Every answer is either grounded in a retrieved source with an inline citation, or clearly labeled as general knowledge when no verified source is available.
 
@@ -18,7 +19,7 @@ General-purpose LLMs can answer medical questions fluently, but that fluency is 
 2. **Vector search** with FAISS finds the most semantically similar chunks from the document corpus.
 3. **Diversity + confidence filtering** removes duplicate chunks from the same source document and filters out low-similarity matches.
 4. **Grounded generation**: if relevant context passed the threshold, the LLM is instructed to answer only from that context, with inline `[DOC_X]` citations.
-5. **Fallback tier**: if nothing passes the threshold â€” or the model itself judges the retrieved context insufficient â€” the system answers from the LLM's general knowledge instead of a hard refusal, but clearly labels that answer as unverified, with no citations.
+5. **Fallback tier**: if nothing passes the threshold — or the model itself judges the retrieved context insufficient — the system answers from the LLM's general knowledge instead of a hard refusal, but clearly labels that answer as unverified, with no citations.
 
 This two-tier design is the core idea: most simple RAG systems either hallucinate when retrieval fails, or refuse outright. MedSource instead gives a labeled middle ground.
 
@@ -65,7 +66,7 @@ CHATBOT_API_KEY=generate-a-random-string-here
 PUBMED_EMAIL=your-email@example.com
 ```
 
-Get a free Gemini key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey) â€” no billing required.
+Get a free Gemini key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey) — no billing required.
 
 ## Building the knowledge base
 
@@ -125,8 +126,8 @@ When no verified source matches, `sources` and `contexts` are empty, `confidence
 ## Known limitations
 
 - Retrieval precision varies for short, conversational symptom questions matched against formal research abstracts.
-- Free-tier Gemini is capped at 20 requests/day per model, and generation takes roughly 10â€“28 seconds per query.
-- No conversation memory yet â€” each question is answered independently of prior turns.
+- Free-tier Gemini is capped at 20 requests/day per model, and generation takes roughly 10–28 seconds per query.
+- No conversation memory yet — each question is answered independently of prior turns.
 - No automated evaluation wired in yet (a RAGAS-based evaluation script exists in `scripts/` but results haven't been published).
 - General-knowledge fallback answers are, by definition, not verified against any source.
 
@@ -144,5 +145,8 @@ MedSource is an educational project and research prototype. It is **not** a subs
 
 ## License
 
-MIT License â€” see [LICENSE](LICENSE).
+MIT License — see [LICENSE](LICENSE).
 
+'@
+Set-Content -Path 'README.md' -Value $content -Encoding utf8
+Write-Host 'README.md has been replaced.'
