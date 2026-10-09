@@ -160,6 +160,7 @@ MedSource-rag-chatbot/
 - **FAISS** - Vector similarity search
 - **Qdrant** - Cloud-native vector database
 
+
 ### Evaluation
 - **RAGAS** - RAG evaluation framework
 - **Datasets** - HuggingFace datasets library
@@ -259,7 +260,8 @@ Visit: http://localhost:8000/docs
 
 | File | Purpose | Audience |
 |------|---------|----------|
-| `README.md` | Complete project overview | Everyone |
+| `README.m
+d` | Complete project overview | Everyone |
 | `QUICKSTART.md` | Step-by-step setup | Developers |
 | `SUBMISSION.md` | Hackathon checklist | Judges |
 | `/docs` endpoint | API documentation | API consumers |

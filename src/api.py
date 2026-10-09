@@ -24,8 +24,6 @@ from src.models import (
 )
 from src.vector_store import VectorStore
 from src.rag_pipeline import RAGPipeline
-# Temporarily disabled due to deployment issues with Rust dependencies
-# from src.evaluation import RAGASEvaluator
 
 # Global variables
 logger = logging.getLogger("MedSource.api")
@@ -41,7 +39,6 @@ settings = get_settings()
 # talking to the LLM provider, not for authenticating callers of this API.
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
-
 async def verify_api_key(provided_key: Optional[str] = Security(api_key_header)):
     """Reject requests without a valid X-API-Key header.
 
@@ -54,7 +51,6 @@ async def verify_api_key(provided_key: Optional[str] = Security(api_key_header))
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Missing or invalid API key. Send it in the X-API-Key header.",
         )
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -135,7 +131,6 @@ async def lifespan(app: FastAPI):
     # Cleanup
     print("\n🛑 Shutting down MedSource...")
 
-
 # Initialize FastAPI app
 app = FastAPI(
     title=settings.app_name,
@@ -167,7 +162,6 @@ app.add_middleware(
     allow_headers=["Content-Type", "X-API-Key"],
 )
 
-
 @app.get("/", response_model=dict)
 async def root():
     """Root endpoint"""
@@ -178,11 +172,9 @@ async def root():
             "health": "/health",
             "query": "/query (POST)",
             "stats": "/stats",
-            # "evaluate": "/evaluate (POST)",  # Temporarily disabled
             "docs": "/docs"
         }
     }
-
 
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
@@ -193,7 +185,6 @@ async def health_check():
         version=settings.app_version,
         vector_store_loaded=vector_store is not None and len(vector_store.documents) > 0
     )
-
 
 @app.post("/query", response_model=QueryResponse, dependencies=[Depends(verify_api_key)])
 @limiter.limit("10/minute")
@@ -254,38 +245,6 @@ async def query_endpoint(request: Request, query_request: QueryRequest):
             detail="Error processing query. Please try again or contact support if this persists."
         )
 
-
-# TEMPORARILY DISABLED: Evaluation endpoint requires 'ragas' package which has Rust compilation issues
-# Will be re-enabled once deployment issues are resolved
-# @app.post("/evaluate", response_model=EvaluationResponse)
-# async def evaluate_endpoint(request: EvaluationRequest):
-#     """
-#     Evaluate the RAG system using RAGAS metrics
-#     
-#     - **questions**: List of questions to evaluate
-#     - **ground_truths**: Optional list of ground truth answers
-#     """
-#     if not rag_pipeline:
-#         raise HTTPException(
-#             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-#             detail="RAG pipeline not initialized."
-#         )
-#     
-#     try:
-#         evaluator = RAGASEvaluator(rag_pipeline)
-#         results = evaluator.evaluate(
-#             questions=request.questions,
-#             ground_truths=request.ground_truths
-#         )
-#         return results
-#     
-#     except Exception as e:
-#         raise HTTPException(
-#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#             detail=f"Error during evaluation: {str(e)}"
-#         )
-
-
 @app.get("/stats", response_model=dict, dependencies=[Depends(verify_api_key)])
 async def stats_endpoint():
     """Get vector store statistics"""
@@ -314,7 +273,6 @@ async def stats_endpoint():
             detail="Error retrieving stats. Please try again or contact support if this persists."
         )
 
-
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
     """Global exception handler"""
@@ -323,7 +281,6 @@ async def global_exception_handler(request, exc):
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={"detail": "Internal server error. Please try again or contact support if this persists."}
     )
-
 
 def start_server():
     """Start the FastAPI server"""
@@ -337,7 +294,6 @@ def start_server():
         reload=False,
         workers=1  # Use 1 worker for development, increase for production
     )
-
 
 if __name__ == "__main__":
     start_server()

@@ -1,3 +1,4 @@
+$content = @'
 """
 RAG Pipeline with LLM integration (OpenAI, Mistral, Qwen, Gemini)
 """
@@ -399,3 +400,7 @@ Provide a brief, cautious answer, following the structure rules above:"""
             total_time_ms=retrieval_time + generation_time,
             warning="Always consult with qualified healthcare professionals for medical decisions."
         )
+
+'@
+Set-Content -Path 'src\rag_pipeline.py' -Value $content -Encoding utf8
+Write-Host 'src/rag_pipeline.py has been replaced.'
