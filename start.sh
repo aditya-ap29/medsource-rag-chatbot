@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/bin/bash
 # MedSource RAG Chatbot - One-Command Setup Script
 # Usage: bash start.sh
 
@@ -87,27 +87,32 @@ setup_env() {
         # Ask user for LLM provider
         echo ""
         echo "Which LLM provider would you like to use?"
-        echo "1) OpenAI GPT-4 (requires API key, $$$)"
-        echo "2) Mistral 7B (open-source, free, runs locally)"
-        echo "3) Qwen 1.5 7B (open-source, free, runs locally)"
-        read -p "Enter choice (1-3): " llm_choice
-        
+        echo "1) Google Gemini (free tier — recommended, requires GEMINI_API_KEY)"
+        echo "2) OpenAI GPT-4 (paid, requires OPENAI_API_KEY)"
+        echo "3) Mistral 7B (open-source, runs locally)"
+        echo "4) Qwen 1.5 7B (open-source, runs locally)"
+        read -p "Enter choice (1-4) [default: 1]: " llm_choice
+
         case $llm_choice in
-            1)
-                echo "LLM_PROVIDER=openai" >> .env
-                print_info "Set to OpenAI. Don't forget to add your API key to .env!"
+            1|"")
+                echo "LLM_PROVIDER=gemini" >> .env
+                print_success "Set to Google Gemini. Add GEMINI_API_KEY to .env!"
                 ;;
             2)
+                echo "LLM_PROVIDER=openai" >> .env
+                print_info "Set to OpenAI. Add OPENAI_API_KEY to .env!"
+                ;;
+            3)
                 echo "LLM_PROVIDER=mistral" >> .env
                 print_success "Set to Mistral (open-source)"
                 ;;
-            3)
+            4)
                 echo "LLM_PROVIDER=qwen" >> .env
                 print_success "Set to Qwen (open-source)"
                 ;;
             *)
-                echo "LLM_PROVIDER=openai" >> .env
-                print_warning "Invalid choice, defaulting to OpenAI"
+                echo "LLM_PROVIDER=gemini" >> .env
+                print_warning "Invalid choice, defaulting to Gemini"
                 ;;
         esac
     else

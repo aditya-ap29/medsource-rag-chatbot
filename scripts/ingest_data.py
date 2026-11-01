@@ -1,4 +1,4 @@
-﻿"""
+"""
 Script to ingest medical documents and build vector store
 """
 import argparse
@@ -10,7 +10,13 @@ from dotenv import load_dotenv
 # Add parent directory to path so we can import src
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.data_ingestion import MedicalCorpusBuilder, PubMedLoader
+from src.data_ingestion import (
+    MedicalCorpusBuilder,
+    PubMedLoader,
+    MedlinePlusLoader,
+    OpenFDADrugLoader,
+    ClinicalTrialsLoader,
+)
 from src.vector_store import VectorStore
 from src.config import get_settings
 
@@ -200,23 +206,215 @@ def create_sample_medical_data():
     return sample_docs
 
 
+# ---------------------------------------------------------------------------
+# Curated PubMed query presets
+# ---------------------------------------------------------------------------
+
+# A broad, high-coverage set of PubMed queries used by --source pubmed-broad.
+# Covers the most common conditions people ask medical chatbots about.
+BROAD_PUBMED_QUERIES = [
+    # Infectious diseases
+    "influenza symptoms treatment adults",
+    "COVID-19 SARS-CoV-2 clinical management",
+    "malaria diagnosis treatment antimalarials",
+    "dengue fever clinical presentation management",
+    "tuberculosis diagnosis treatment first-line",
+    "HIV antiretroviral therapy outcomes",
+    "urinary tract infection antibiotics treatment",
+    "sepsis early recognition management",
+    # Cardiovascular
+    "hypertension treatment guidelines antihypertensive",
+    "heart failure diagnosis management",
+    "acute myocardial infarction percutaneous coronary intervention",
+    "atrial fibrillation anticoagulation management",
+    "stroke ischemic thrombolysis outcomes",
+    # Endocrine / Metabolic
+    "type 2 diabetes mellitus glycemic control metformin",
+    "type 1 diabetes insulin therapy",
+    "hypothyroidism levothyroxine treatment",
+    "hyperthyroidism Graves disease treatment",
+    "obesity metabolic syndrome GLP-1 semaglutide",
+    "polycystic ovary syndrome PCOS management",
+    # Respiratory
+    "asthma inhaled corticosteroid bronchodilator",
+    "COPD chronic obstructive pulmonary disease exacerbation",
+    "pneumonia community-acquired antibiotics",
+    "pulmonary embolism anticoagulation diagnosis",
+    # Gastrointestinal
+    "gastroesophageal reflux disease GERD proton pump inhibitor",
+    "irritable bowel syndrome low FODMAP treatment",
+    "inflammatory bowel disease Crohn colitis biologics",
+    "celiac disease gluten-free diet",
+    "peptic ulcer H pylori eradication",
+    "liver cirrhosis complications management",
+    # Neurological / Mental health
+    "migraine prophylaxis acute treatment triptans",
+    "epilepsy seizure antiepileptic drug",
+    "major depressive disorder antidepressant psychotherapy",
+    "generalized anxiety disorder cognitive behavioral therapy",
+    "ADHD attention deficit hyperactivity disorder stimulant methylphenidate",
+    "Alzheimer disease dementia management",
+    "Parkinson disease dopaminergic treatment",
+    # Musculoskeletal
+    "rheumatoid arthritis DMARD biologic treatment",
+    "osteoarthritis knee pain management",
+    "osteoporosis bisphosphonate fracture prevention",
+    "gout uric acid allopurinol management",
+    # Renal
+    "chronic kidney disease progression management",
+    "nephrolithiasis kidney stone treatment prevention",
+    # Hematological
+    "iron deficiency anemia treatment supplementation",
+    "vitamin B12 deficiency peripheral neuropathy",
+    # Dermatological
+    "atopic dermatitis eczema treatment biologics",
+    "psoriasis biologic treatment outcomes",
+    # Nutritional
+    "vitamin D deficiency supplementation",
+    "malnutrition undernutrition children management",
+]
+
+
+def ingest_medlineplus(
+    corpus_builder: MedicalCorpusBuilder,
+    vector_store,
+    queries: list,
+) -> int:
+    """Fetch and ingest MedlinePlus NLM health-topic articles."""
+    print("\n" + "=" * 60)
+    print("📖 Fetching MedlinePlus (NLM/NIH) articles...")
+    print("=" * 60)
+
+    existing_doc_ids = {doc["doc_id"] for doc in vector_store.documents}
+    loader = MedlinePlusLoader()
+    all_docs = []
+    skipped = 0
+
+    for query in queries:
+        print(f"\n🔍 Searching MedlinePlus: {query}")
+        docs = loader.search(query, max_results=5)
+        new_docs = [d for d in docs if d.doc_id not in existing_doc_ids]
+        skipped += len(docs) - len(new_docs)
+        for d in new_docs:
+            existing_doc_ids.add(d.doc_id)
+        print(f"   {len(new_docs)} new article(s)")
+        all_docs.extend(new_docs)
+
+    if not all_docs:
+        print(f"⚠️  No new MedlinePlus articles retrieved ({skipped} duplicates skipped).")
+        return 0
+
+    print(f"\n✅ Total new MedlinePlus documents: {len(all_docs)}")
+    corpus_builder.save_corpus(all_docs, "medlineplus_corpus.json")
+    print("\n📊 Adding MedlinePlus documents to vector store...")
+    vector_store.add_documents(all_docs)
+    return len(all_docs)
+
+
+def ingest_openfda(
+    corpus_builder: MedicalCorpusBuilder,
+    vector_store,
+    drug_names: list,
+    max_per_drug: int = 3,
+    api_key: str = "",
+) -> int:
+    """Fetch and ingest FDA drug labels from openFDA."""
+    print("\n" + "=" * 60)
+    print("💊 Fetching FDA drug labels (openFDA)...")
+    print("=" * 60)
+
+    existing_doc_ids = {doc["doc_id"] for doc in vector_store.documents}
+    loader = OpenFDADrugLoader(api_key=api_key or None)
+    all_docs = []
+    skipped = 0
+
+    for drug in drug_names:
+        print(f"\n🔍 Fetching label: {drug}")
+        docs = loader.search_drug(drug, max_results=max_per_drug)
+        new_docs = [d for d in docs if d.doc_id not in existing_doc_ids]
+        skipped += len(docs) - len(new_docs)
+        for d in new_docs:
+            existing_doc_ids.add(d.doc_id)
+        print(f"   {len(new_docs)} new section(s)")
+        all_docs.extend(new_docs)
+
+    if not all_docs:
+        print(f"⚠️  No new FDA drug label sections retrieved ({skipped} duplicates skipped).")
+        return 0
+
+    print(f"\n✅ Total new FDA drug label documents: {len(all_docs)}")
+    corpus_builder.save_corpus(all_docs, "openfda_corpus.json")
+    print("\n📊 Adding FDA drug label documents to vector store...")
+    vector_store.add_documents(all_docs)
+    return len(all_docs)
+
+
+def ingest_clinical_trials(
+    corpus_builder: MedicalCorpusBuilder,
+    vector_store,
+    queries: list,
+    max_per_query: int = 5,
+    status: str = "COMPLETED",
+) -> int:
+    """Fetch and ingest completed clinical trial summaries from ClinicalTrials.gov."""
+    print("\n" + "=" * 60)
+    print("🔬 Fetching clinical trial summaries (ClinicalTrials.gov)...")
+    print("=" * 60)
+
+    existing_doc_ids = {doc["doc_id"] for doc in vector_store.documents}
+    loader = ClinicalTrialsLoader()
+    all_docs = []
+    skipped = 0
+
+    for query in queries:
+        print(f"\n🔍 Searching trials: {query}")
+        docs = loader.search(query, max_results=max_per_query, status=status)
+        new_docs = [d for d in docs if d.doc_id not in existing_doc_ids]
+        skipped += len(docs) - len(new_docs)
+        for d in new_docs:
+            existing_doc_ids.add(d.doc_id)
+        print(f"   {len(new_docs)} new trial(s)")
+        all_docs.extend(new_docs)
+
+    if not all_docs:
+        print(f"⚠️  No new clinical trials retrieved ({skipped} duplicates skipped).")
+        return 0
+
+    print(f"\n✅ Total new clinical trial documents: {len(all_docs)}")
+    corpus_builder.save_corpus(all_docs, "clinical_trials_corpus.json")
+    print("\n📊 Adding clinical trial documents to vector store...")
+    vector_store.add_documents(all_docs)
+    return len(all_docs)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Ingest medical documents and build vector store")
     parser.add_argument(
         "--source",
-        choices=["local", "pubmed", "sample", "all"],
+        choices=["local", "pubmed", "pubmed-broad", "sample", "medlineplus",
+                 "openfda", "clinical-trials", "all"],
         default="all",
-        help="Data source to ingest"
+        help=(
+            "Data source to ingest:\n"
+            "  local          — files in data/raw_documents/\n"
+            "  pubmed         — PubMed queries (use --pubmed-queries)\n"
+            "  pubmed-broad   — broad preset of 55 PubMed queries covering common conditions\n"
+            "  sample         — built-in 6-document sample set\n"
+            "  medlineplus    — MedlinePlus NLM/NIH health topics (free, no key)\n"
+            "  openfda        — FDA drug labels (free, no key; use --drugs)\n"
+            "  clinical-trials— ClinicalTrials.gov completed study summaries\n"
+            "  all            — local + sample + medlineplus (good default bootstrap)"
+        )
     )
     parser.add_argument(
         "--pubmed-queries",
         nargs="+",
         default=[
-            "vitamin deficiency symptoms",
-            "common medical conditions treatment",
-            "chronic disease management"
+            "vitamin deficiency symptoms treatment",
+            "common medical conditions management",
+            "chronic disease treatment outcomes",
         ],
-        help="PubMed search queries"
+        help="PubMed search queries (used with --source pubmed)"
     )
     parser.add_argument(
         "--max-pubmed-results",
@@ -225,16 +423,44 @@ def main():
         help="Maximum results per PubMed query"
     )
     parser.add_argument(
+        "--drugs",
+        nargs="+",
+        default=[
+            "metformin", "lisinopril", "atorvastatin", "amlodipine",
+            "levothyroxine", "omeprazole", "amoxicillin", "ibuprofen",
+            "sertraline", "albuterol",
+        ],
+        help="Drug names for --source openfda"
+    )
+    parser.add_argument(
+        "--clinical-trial-queries",
+        nargs="+",
+        default=[
+            "type 2 diabetes", "hypertension", "asthma", "depression",
+            "rheumatoid arthritis", "heart failure",
+        ],
+        help="Condition queries for --source clinical-trials"
+    )
+    parser.add_argument(
+        "--medlineplus-queries",
+        nargs="+",
+        default=[
+            "diabetes", "hypertension", "anemia", "asthma", "depression",
+            "anxiety", "arthritis", "thyroid", "kidney disease", "stroke",
+        ],
+        help="Search queries for --source medlineplus"
+    )
+    parser.add_argument(
         "--fresh",
         action="store_true",
         help="Discard any existing vector store and start empty, instead of appending to it"
     )
-    
+
     args = parser.parse_args()
-    
+
     # Load settings
     settings = get_settings()
-    
+
     # Initialize components
     corpus_builder = MedicalCorpusBuilder()
     vector_store = VectorStore(
@@ -244,36 +470,36 @@ def main():
     )
 
     # If a vector store already exists on disk, load it and ADD to it instead
-    # of starting from empty. This lets PubMed ingestion be run in multiple
+    # of starting from empty. This lets ingestion be run in multiple
     # smaller batches (safer at scale) without losing previously ingested data.
     # Use --fresh to explicitly discard any existing store and start empty.
     existing_store_path = Path(settings.vector_store_path)
     if not args.fresh and existing_store_path.exists() and (existing_store_path / "faiss.index").exists():
-        print(f"\nðŸ“‚ Existing vector store found at {settings.vector_store_path} â€” loading to append...")
+        print(f"\n📂 Existing vector store found at {settings.vector_store_path} — loading to append...")
         vector_store.load(settings.vector_store_path)
         print(f"   Starting from {len(vector_store.documents)} existing chunks.\n")
     else:
-        print("\nðŸ“‚ No existing vector store found (or --fresh was passed) â€” starting empty.\n")
-    
+        print("\n📂 No existing vector store found (or --fresh was passed) — starting empty.\n")
+
     total_docs = 0
-    
+
     # Create sample data if requested
     if args.source in ["sample", "all"]:
         sample_docs = create_sample_medical_data()
-        
+
         # Add sample documents to vector store
-        print("\nðŸ“Š Adding sample documents to vector store...")
+        print("\n📊 Adding sample documents to vector store...")
         vector_store.add_documents(sample_docs)
         total_docs += len(sample_docs)
-        
+
         # Save corpus
         corpus_builder.save_corpus(sample_docs, "sample_corpus.json")
-    
+
     # Ingest from local files
     if args.source in ["local", "all"]:
         total_docs += ingest_local_documents(corpus_builder, vector_store)
-    
-    # Ingest from PubMed
+
+    # Ingest from PubMed (custom queries)
     if args.source == "pubmed":
         total_docs += ingest_pubmed_abstracts(
             corpus_builder,
@@ -281,7 +507,34 @@ def main():
             args.pubmed_queries,
             args.max_pubmed_results
         )
-    
+
+    # Ingest from PubMed (broad preset — 55 queries)
+    if args.source == "pubmed-broad":
+        total_docs += ingest_pubmed_abstracts(
+            corpus_builder,
+            vector_store,
+            BROAD_PUBMED_QUERIES,
+            max_results_per_query=20,
+        )
+
+    # Ingest from MedlinePlus
+    if args.source in ["medlineplus", "all"]:
+        total_docs += ingest_medlineplus(
+            corpus_builder, vector_store, args.medlineplus_queries
+        )
+
+    # Ingest from openFDA drug labels
+    if args.source == "openfda":
+        total_docs += ingest_openfda(
+            corpus_builder, vector_store, args.drugs
+        )
+
+    # Ingest from ClinicalTrials.gov
+    if args.source == "clinical-trials":
+        total_docs += ingest_clinical_trials(
+            corpus_builder, vector_store, args.clinical_trial_queries
+        )
+
     # Save vector store
     if total_docs > 0:
         print("\n" + "="*60)
@@ -301,7 +554,7 @@ def main():
     print("ðŸŽ‰ Ingestion complete!")
     print("="*60)
     print("\nNext steps:")
-    print("1. Set your OpenAI API key in .env file (or configure open-source LLM)")
+    print("1. Set your GEMINI_API_KEY in .env file (get a free key at aistudio.google.com/apikey)")
     print("2. Run the API server: python -m src.api")
     print("3. Test the endpoint: curl -X POST http://localhost:8000/query \\")
     print("   -H 'Content-Type: application/json' \\")

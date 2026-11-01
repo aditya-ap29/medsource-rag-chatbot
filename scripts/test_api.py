@@ -1,4 +1,4 @@
-"""
+﻿"""
 Test script to validate the RAG pipeline
 """
 import sys

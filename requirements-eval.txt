@@ -1,0 +1,16 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# RAGAS evaluation dependencies — scripts/run_ragas_eval.py ONLY
+#
+# Install separately AFTER the main requirements:
+#   pip install -r requirements.txt
+#   pip install -r requirements-eval.txt
+#
+# Note: ragas 0.4.x pulls in langchain 1.x. That conflicts with no runtime
+# dependency since langchain is not in requirements.txt at all. Keep these
+# in a separate file so the API and Streamlit install stays lean.
+# ─────────────────────────────────────────────────────────────────────────────
+ragas>=0.4.0
+langchain>=0.1.0
+langchain-google-genai>=1.0.0
+langchain-huggingface>=0.0.6
+langchain-community>=0.0.20

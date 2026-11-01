@@ -1,0 +1,76 @@
+# MedSource — Streamlit configuration
+# Both light and dark variants defined so the user can switch via ☰ Settings
+
+[theme]
+base                   = "light"
+font                   = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+codeFont               = "'JetBrains Mono':https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
+baseRadius             = "small"
+showWidgetBorder       = true
+showSidebarBorder      = true
+baseFontSize           = 14
+baseFontWeight         = 400
+headingFontSizes       = ["26px", "20px", "17px", "15px", "13px", "12px"]
+headingFontWeights     = [600, 600, 600, 500, 500, 500]
+linkUnderline          = false
+
+# ── Light mode ─────────────────────────────────────────────────────────────
+[theme.light]
+primaryColor              = "#3d7a5c"
+backgroundColor           = "#ffffff"
+secondaryBackgroundColor  = "#f5f6f7"
+textColor                 = "#1a1f2e"
+borderColor               = "#e1e4e8"
+linkColor                 = "#3d7a5c"
+codeTextColor             = "#1a1f2e"
+codeBackgroundColor       = "#f5f6f7"
+greenColor                = "#3d7a5c"
+greenBackgroundColor      = "#e8f5ee"
+greenTextColor            = "#2a5c42"
+redColor                  = "#b91c1c"
+orangeColor               = "#b45309"
+blueColor                 = "#2563eb"
+grayColor                 = "#6b7280"
+dataframeBorderColor      = "#e1e4e8"
+dataframeHeaderBackgroundColor = "#f5f6f7"
+chartCategoricalColors    = ["#3d7a5c", "#2563eb", "#b45309", "#7c3aed", "#b91c1c", "#0891b2", "#6b7280"]
+
+[theme.light.sidebar]
+backgroundColor           = "#f5f6f7"
+secondaryBackgroundColor  = "#eceef0"
+textColor                 = "#1a1f2e"
+borderColor               = "#e1e4e8"
+primaryColor              = "#3d7a5c"
+
+# ── Dark mode ───────────────────────────────────────────────────────────────
+[theme.dark]
+primaryColor              = "#5aac7d"
+backgroundColor           = "#111318"
+secondaryBackgroundColor  = "#1c1f26"
+textColor                 = "#e4e7ed"
+borderColor               = "#2e3340"
+linkColor                 = "#5aac7d"
+codeTextColor             = "#e4e7ed"
+codeBackgroundColor       = "#1c1f26"
+greenColor                = "#5aac7d"
+greenBackgroundColor      = "#1a3328"
+greenTextColor            = "#7bc99a"
+redColor                  = "#f87171"
+orangeColor               = "#fbbf24"
+blueColor                 = "#60a5fa"
+grayColor                 = "#9ca3af"
+dataframeBorderColor      = "#2e3340"
+dataframeHeaderBackgroundColor = "#1c1f26"
+chartCategoricalColors    = ["#5aac7d", "#60a5fa", "#fbbf24", "#a78bfa", "#f87171", "#22d3ee", "#9ca3af"]
+
+[theme.dark.sidebar]
+backgroundColor           = "#0e1115"
+secondaryBackgroundColor  = "#1c1f26"
+textColor                 = "#e4e7ed"
+borderColor               = "#2e3340"
+primaryColor              = "#5aac7d"
+
+[server]
+headless             = true
+enableCORS           = false
+enableXsrfProtection = true

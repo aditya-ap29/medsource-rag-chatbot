@@ -1,4 +1,4 @@
-version: '3.8'
+﻿version: '3.8'
 
 services:
   MedSource:
@@ -7,10 +7,33 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - LLM_PROVIDER=${LLM_PROVIDER:-openai}
+      # LLM provider — change to 'openai' if you want to use OpenAI instead
+      - LLM_PROVIDER=${LLM_PROVIDER:-gemini}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - LLM_MODEL=${LLM_MODEL:-gemini-2.0-flash}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      # Key required to call this app's /query endpoint (leave blank to disable auth)
+      - CHATBOT_API_KEY=${CHATBOT_API_KEY:-}
+      # Embedding
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-BAAI/bge-base-en-v1.5}
+      - EMBEDDING_BATCH_SIZE=${EMBEDDING_BATCH_SIZE:-32}
+      # Retrieval
+      - TOP_K_DOCUMENTS=${TOP_K_DOCUMENTS:-5}
+      - RETRIEVAL_CONFIDENCE_THRESHOLD=${RETRIEVAL_CONFIDENCE_THRESHOLD:-0.30}
+      - ENABLE_GENERAL_FALLBACK=${ENABLE_GENERAL_FALLBACK:-true}
+      - ENABLE_QUERY_EXPANSION=${ENABLE_QUERY_EXPANSION:-false}
+      - ENABLE_RERANKER=${ENABLE_RERANKER:-false}
+      # Chunking
+      - CHUNK_SIZE=${CHUNK_SIZE:-256}
+      - CHUNK_OVERLAP=${CHUNK_OVERLAP:-40}
+      # API
       - API_HOST=0.0.0.0
       - API_PORT=8000
+      - LLM_TEMPERATURE=${LLM_TEMPERATURE:-0.1}
+      - MAX_TOKENS=${MAX_TOKENS:-1000}
+      # Threading (prevents OpenMP conflicts on CPU-only hosts)
+      - OMP_NUM_THREADS=1
+      - OPENBLAS_NUM_THREADS=1
     volumes:
       - ./data:/app/data
       - ./.env:/app/.env

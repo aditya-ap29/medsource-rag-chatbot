@@ -13,20 +13,31 @@ class Source(BaseModel):
     url: Optional[str] = Field(None, description="URL to source")
     relevance_score: float = Field(..., description="Retrieval confidence score")
     excerpt: str = Field(..., description="Relevant excerpt from document")
+    provenance: Optional[str] = Field(
+        None,
+        description="Source of the retrieved passage: 'indexed' (from FAISS) or 'live_pubmed' (fetched at query time)",
+    )
 
 
 class QueryRequest(BaseModel):
-    """Model for incoming query requests - Hack-A-Cure competition format"""
-    query: str = Field(..., min_length=3, description="User's medical question")
+    """Model for incoming query requests"""
+    # min_length=1 to allow common 2-character medical abbreviations (TB, BP, MI, etc.)
+    query: str = Field(..., min_length=1, description="User's medical question")
     top_k: int = Field(5, ge=1, le=20, description="Number of context snippets to retrieve")
-    
+
+    # Conversation history — list of prior turns in chronological order.
+    # Each entry must have "role" ("user" or "assistant") and "content".
+    history: Optional[List[Dict[str, str]]] = Field(
+        None, description="Prior conversation turns for multi-turn dialogue"
+    )
+
     # Legacy support
-    question: Optional[str] = Field(None, min_length=3, description="User's medical question (legacy)")
+    question: Optional[str] = Field(None, min_length=1, description="User's medical question (legacy)")
     include_sources: Optional[bool] = Field(True, description="Include source documents in response")
 
 
 class QueryResponse(BaseModel):
-    """Model for query responses - Hack-A-Cure competition format"""
+    """Model for query responses"""
     answer: str = Field(..., description="Generated answer with inline citations")
     contexts: List[str] = Field(default_factory=list, description="Retrieved context snippets as plain strings")
     
@@ -48,17 +59,3 @@ class HealthResponse(BaseModel):
     vector_store_loaded: bool = Field(..., description="Whether vector store is initialized")
 
 
-class EvaluationRequest(BaseModel):
-    """Model for RAGAS evaluation requests"""
-    questions: List[str] = Field(..., description="List of questions to evaluate")
-    ground_truths: Optional[List[str]] = Field(None, description="Optional ground truth answers")
-
-
-class EvaluationResponse(BaseModel):
-    """Model for RAGAS evaluation results"""
-    faithfulness: float = Field(..., description="Faithfulness score (0-1)")
-    context_precision: float = Field(..., description="Context precision score (0-1)")
-    answer_relevance: float = Field(..., description="Answer relevance score (0-1)")
-    context_recall: Optional[float] = Field(None, description="Context recall score (0-1)")
-    overall_score: float = Field(..., description="Average RAGAS score")
-    details: List[Dict] = Field(default_factory=list, description="Per-question evaluation details")

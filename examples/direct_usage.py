@@ -1,4 +1,4 @@
-"""
+﻿"""
 Minimal example of using MedSource directly (without API)
 """
 import os
@@ -38,9 +38,8 @@ def main():
     # Initialize RAG pipeline
     rag_pipeline = RAGPipeline(
         vector_store=vector_store,
-        llm_provider="openai",  # or "mistral", "qwen"
         model_name=settings.llm_model,
-        api_key=settings.openai_api_key,
+        api_key=settings.gemini_api_key,
         temperature=settings.llm_temperature,
         max_tokens=settings.max_tokens,
         top_k=settings.top_k_documents,

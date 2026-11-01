@@ -1,145 +1,140 @@
-# 🚀 Render.com Deployment Guide for Hack-A-Cure
+﻿# Deployment — MedSource RAG Chatbot
 
-## ⚠️ IMPORTANT: Vector Store Setup
+## Render.com (recommended — free tier)
 
-**The vector store (551MB) is too large for GitHub.** You have 2 options:
+MedSource includes a `render.yaml` that fully configures a free Render web service. The only manual steps are uploading secrets and the pre-built vector store.
 
-### Option 1: Re-ingest on Render (Recommended for Free Tier)
-- Upload PDFs to Render
-- Run ingestion script during deployment
-- Pros: No external dependencies
-- Cons: Takes 30-45 minutes on first deployment
-
-### Option 2: Use Cloud Storage (Faster)
-- Upload `vector_store_backup.tar.gz` to Google Drive/Dropbox
-- Download during Render build process
-- Pros: Faster deployment (5 minutes)
-- Cons: Needs download URL
-
-**For this hackathon, we'll use Option 2 (faster).**
-
----
-
-## Quick Deployment Steps (10 minutes)
-
-### Step 1: Push Code to GitHub
+### 1. Push code to GitHub
 
 ```bash
-cd /Users/gugank/MedSource-rag-chatbot
-
-# Commit and push (vector_store is excluded via .gitignore)
 git add .
-git commit -m "Hack-A-Cure RAG submission - Gemini + FAISS"
-
-# Create GitHub repo first at github.com, then:
-git remote add origin https://github.com/YOUR_USERNAME/MedSource-rag-chatbot.git
+git commit -m "Deploy MedSource RAG chatbot"
+git remote add origin https://github.com/YOUR_GITHUB_USERNAME/MedSource-rag-chatbot.git
 git push -u origin main
 ```
 
-### Step 2: Upload Vector Store to Cloud
-
-**Option A: Google Drive**
-1. Upload `vector_store_backup.tar.gz` to Google Drive
-2. Right-click → Share → Anyone with link can view
-3. Get shareable link (looks like `https://drive.google.com/file/d/FILE_ID/view`)
-4. Convert to direct download: `https://drive.google.com/uc?export=download&id=FILE_ID`
-
-**Option B: Dropbox**
-1. Upload `vector_store_backup.tar.gz` to Dropbox
-2. Share → Create link
-3. Change `?dl=0` to `?dl=1` at end of URL
-
-### Step 3: Create Render Account & Deploy
-
-1. **Create Render Account**
-   - Go to https://render.com
-   - Sign up with GitHub (easiest)
-
-2. **Create New Web Service**
-   - Click "New +" → "Web Service"
-   - Connect your GitHub repository
-   - Render will auto-detect `render.yaml`
-
-3. **Add Vector Store URL**
-   - In Render dashboard, add environment variable:
-   - Key: `VECTOR_STORE_URL`
-   - Value: Your download URL from Step 2
-
-4. **Deploy!**
-   - Click "Create Web Service"
-   - Wait 5-10 minutes for deployment
-   - Your API will be at: `https://MedSource-rag-api.onrender.com`
+> The `data/vector_store/` directory is in `.gitignore` — it must be uploaded separately (see step 3).
 
 ---
 
-## Alternative: Manual Configuration
-   ```
-   GEMINI_API_KEY=AIzaSyCEcVyJeeQztcxbG-ekdheNh_4tMN9z0P0
-   LLM_PROVIDER=gemini
-   LLM_MODEL=gemini-2.0-flash
-   RETRIEVAL_CONFIDENCE_THRESHOLD=0.3
-   OMP_NUM_THREADS=1
-   OPENBLAS_NUM_THREADS=1
-   VECLIB_MAXIMUM_THREADS=1
-   ```
+### 2. Create the Render service
 
-5. **Deploy!**
-   - Click "Create Web Service"
-   - Wait 5-10 minutes
+1. Go to [render.com](https://render.com) → **New +** → **Web Service**
+2. Connect your GitHub repository
+3. Render auto-detects `render.yaml` — no manual configuration needed
 
-## 📋 After Deployment
+---
 
-### Test Your Deployed API
-```bash
-curl -X POST https://YOUR-APP.onrender.com/query \
-  -H "Content-Type: application/json" \
-  -d '{"query": "When to give Tdap booster?", "top_k": 3}'
+### 3. Upload the vector store
+
+The FAISS index is too large for git. Upload it to any public or signed-URL file host:
+
+**Google Drive**
+```
+1. Upload data/vector_store/ as a .tar.gz archive
+2. Share → Anyone with link → Get the file ID from the URL
+3. Direct download URL: https://drive.google.com/uc?export=download&id=FILE_ID
 ```
 
-### Submit to Hack-A-Cure
-1. Go to hackathon submission page
-2. Enter: `https://YOUR-APP.onrender.com/query`
-3. Test with their evaluator
-4. You have 10 submissions to optimize!
+**Dropbox**
+```
+1. Upload the archive → Share → Create link
+2. Change ?dl=0 → ?dl=1 at the end of the URL
+```
 
-## ⚠️ Important Notes
+Then set the `VECTOR_STORE_URL` environment variable in the Render dashboard. The `render.yaml` build step runs `scripts/download_vector_store.sh` which fetches and extracts it automatically.
 
-1. **Vector Store**: Your 267K chunks (1.6GB) are already in `data/vector_store/` - they will deploy with your code
+---
 
-2. **Free Tier Limitations**:
-   - Sleeps after 15 min inactivity
-   - Takes ~30 seconds to wake up
-   - 750 hours/month free
+### 4. Set environment secrets
 
-3. **Keep It Awake** (optional):
-   - Use cron-job.org to ping your `/health` endpoint every 10 minutes
-   - Or just let it sleep - it wakes up fast enough for hackathon evaluation
+In the Render dashboard → your service → **Environment**, add:
 
-4. **Monitoring**:
-   - Check logs in Render dashboard
-   - Monitor at: https://dashboard.render.com
+| Key | Value |
+|---|---|
+| `GEMINI_API_KEY` | Your Gemini API key from [aistudio.google.com/apikey](https://aistudio.google.com/apikey) |
+| `CHATBOT_API_KEY` | A random string (e.g. `openssl rand -hex 32`) — required to call `/query` |
+| `VECTOR_STORE_URL` | Download URL from step 3 |
 
-## 🔧 Troubleshooting
+All other variables are pre-set in `render.yaml` with correct defaults.
 
-**Build fails?**
-- Check requirements.txt includes all packages
-- Verify Python version is 3.11
+---
 
-**App crashes?**
-- Check Render logs
-- Verify GEMINI_API_KEY is set
-- Ensure vector_store files are committed to git
+### 5. Deploy
 
-**Slow responses?**
-- First request after sleep takes ~30 sec
-- Subsequent requests are fast (~2 sec)
+Click **Create Web Service**. First deploy takes ~5 minutes (pip install + model download).
 
-## 📊 Current Configuration
+Your API will be live at:
+```
+https://MedSource-rag-api.onrender.com
+```
 
-- **Vector Store**: 267,211 chunks from 9 medical PDFs
-- **Model**: Google Gemini 2.0-Flash (FREE)
-- **Response Format**: Hack-A-Cure compliant (`{answer, contexts}`)
-- **Average Response Time**: ~2 seconds (when warm)
-- **Retrieval Threshold**: 0.3 (balanced for medical content)
+Test it:
+```bash
+curl -X POST https://MedSource-rag-api.onrender.com/query \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-chatbot-api-key" \
+  -d '{"query": "What are the symptoms of anaemia?", "top_k": 5}'
+```
 
-Good luck with your hackathon! 🎉
+---
+
+## Docker (local)
+
+```bash
+# Build
+docker build -t MedSource-rag .
+
+# Run (reads from .env automatically)
+docker-compose up
+```
+
+The `docker-compose.yml` maps all required environment variables. Copy `.env.example` to `.env` and fill in your keys before running.
+
+---
+
+## Free-tier limitations (Render)
+
+| Constraint | Details |
+|---|---|
+| Sleep | Service sleeps after 15 min of inactivity |
+| Wake-up time | ~30 seconds on first request after sleep |
+| Monthly hours | 750 free hours (enough for continuous uptime) |
+| RAM | ~512 MB (the BGE embedding model uses ~300 MB) |
+| CPU | Shared, no GPU |
+
+**Keep-alive (optional):** Use [cron-job.org](https://cron-job.org) to ping `/health` every 10 minutes to prevent sleep.
+
+---
+
+## Configuration reference
+
+All settings are environment variables. The most important ones:
+
+| Variable | Default | Description |
+|---|---|---|
+| `LLM_PROVIDER` | `gemini` | `gemini`, `openai`, `mistral`, `qwen` |
+| `GEMINI_API_KEY` | — | Required when `LLM_PROVIDER=gemini` |
+| `LLM_MODEL` | `gemini-2.0-flash` | Model name passed to the provider |
+| `CHATBOT_API_KEY` | _(blank = no auth)_ | Key clients must send in `X-API-Key` header |
+| `EMBEDDING_MODEL` | `BAAI/bge-base-en-v1.5` | Do not change unless re-embedding the index |
+| `RETRIEVAL_CONFIDENCE_THRESHOLD` | `0.30` | Below this score → general-knowledge fallback |
+| `TOP_K_DOCUMENTS` | `5` | Passages retrieved per query |
+| `ENABLE_RERANKER` | `false` | Cross-encoder re-ranking (+30 ms, better precision) |
+| `ENABLE_QUERY_EXPANSION` | `false` | LLM rephrases query into 3 variants (+1 LLM call) |
+| `OMP_NUM_THREADS` | `1` | Prevent OpenMP conflicts on CPU-only hosts |
+
+Full list in [`.env.example`](.env.example).
+
+---
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| Build fails: `pip install` error | Check Python version is 3.11 in `render.yaml` |
+| `Vector store not found` on startup | Check `VECTOR_STORE_URL` is set and accessible |
+| `GEMINI_API_KEY` missing error | Add key in Render dashboard → Environment |
+| 503 on `/query` | Service may still be initialising — check `/health` |
+| Slow cold start | Normal — BGE model downloads ~440 MB on first boot |
+| Out of memory crash | Reduce `EMBEDDING_BATCH_SIZE` to `16` in environment |

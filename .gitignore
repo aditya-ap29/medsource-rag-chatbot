@@ -1,47 +1,117 @@
-# Environment
+﻿# ─────────────────────────────────────────────────────────────────────────────
+# MedSource — .gitignore
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Secrets & environment ──────────────────────────────────────────────────
 .env
+.env.local
+.env.*.local
+*.secret
+secrets/
+.streamlit/secrets.toml
+
+# ── Python virtual environments ────────────────────────────────────────────
 venv/
 venv_old_py39/
 env/
 ENV/
-.venv
+.venv/
 
-# Python
+# ── Python bytecode & compiled files ──────────────────────────────────────
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.pyd
 .Python
 
-# Data & Models
-data/vector_store/*  # Will be generated on Render during deployment
-# data/raw_documents/*  # KEEP PDFs for Render ingestion
-data/processed/*
+# ── Vector store & large binary model artifacts ───────────────────────────
+# Keep vector_store/ directory (for .gitkeep) but exclude its binary files
+data/vector_store/*.pkl
+data/vector_store/*.index
+data/vector_store/*.bin
+data/vector_store_v1/*.pkl
+data/vector_store_v1/*.index
+data/vector_store_v1/*.bin
+data/vector_store_backup*/
+data/vector_store_*_old_*/
+data/semantic_classifier_v1/
 *.pkl
 *.bin
 *.index
 vector_store_backup.tar.gz
 
-# IDEs
+# ── Processed corpus dumps (large, regenerable) ───────────────────────────
+data/processed/
+
+# ── Local SQLite databases (user/session data) ────────────────────────────
+data/feedback.db
+*.db
+*.sqlite
+*.sqlite3
+
+# ── Internal operational logs ─────────────────────────────────────────────
+data/swap_log.json
+
+# ── Removed raw documents staging area ───────────────────────────────────
+data/raw_documents_removed/
+
+# ── RAGAS / evaluation run outputs (timestamped, regenerable) ─────────────
+ragas_cache.json
+ragas_eval_results.csv
+data/eval/results_*.json
+
+# ── Streamlit process capture logs ────────────────────────────────────────
+st_stdout*.txt
+st_stderr*.txt
+
+# ── Build / CI logs ────────────────────────────────────────────────────────
+logs/
+*.log
+
+# ── Testing ────────────────────────────────────────────────────────────────
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# ── IDE / editor ──────────────────────────────────────────────────────────
 .vscode/
 .idea/
 *.swp
 *.swo
+*.swn
+*.bak
 
-# Logs
-logs/
-*.log
+# ── Bob (AI assistant) workspace ──────────────────────────────────────────
+.bob/
 
-# OS
+# ── OS generated files ────────────────────────────────────────────────────
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
 
-# Testing
-.pytest_cache/
-htmlcov/
-.coverage
-
-# Distribution
+# ── Distribution / packaging ──────────────────────────────────────────────
 dist/
 build/
 *.egg-info/
+*.egg
+MANIFEST
+
+# ── Jupyter Notebooks checkpoints ─────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ── Uploaded user files (session-scoped, never stored) ───────────────────
+uploads/
+user_uploads/
+
+# ── SQLite WAL/SHM journal files ──────────────────────────────────────────
+*.db-shm
+*.db-wal

@@ -395,3 +395,395 @@ class MedicalCorpusBuilder:
             documents.append(doc)
         
         return documents
+
+
+class MedlinePlusLoader:
+    """
+    Fetch authoritative patient-education articles from the U.S. National Library of
+    Medicine's MedlinePlus Connect API — completely free, no API key required.
+
+    API docs: https://medlineplus.gov/connect/service.html
+    Endpoint:  https://connect.medlineplus.gov/application?
+                   mainSearchCriteria.v.cs=2.16.840.1.113883.6.90   (ICD-10)
+                   &mainSearchCriteria.v.c=<ICD10_CODE>
+                   &knowledgeResponseType=application/json
+
+    Alternatively use the full-text search endpoint:
+        https://wsearch.nlm.nih.gov/ws/query?db=healthTopics&term=<QUERY>
+    which returns NLM HealthTopics XML that we parse into MedicalDocuments.
+
+    Usage example
+    -------------
+    loader = MedlinePlusLoader()
+    docs = loader.search("anemia")          # free-text search
+    docs += loader.fetch_by_icd10("D50")    # ICD-10 lookup (iron-def anaemia)
+    """
+
+    SEARCH_URL = "https://wsearch.nlm.nih.gov/ws/query"
+    CONNECT_URL = "https://connect.medlineplus.gov/application"
+
+    # ICD-10-CM coding system OID used by the Connect API
+    ICD10_CS = "2.16.840.1.113883.6.90"
+
+    def search(self, query: str, max_results: int = 10) -> List[MedicalDocument]:
+        """Full-text search of MedlinePlus Health Topics."""
+        params = {
+            "db": "healthTopics",
+            "term": query,
+            "retmax": max_results,
+            "rettype": "brief",
+        }
+        try:
+            resp = requests.get(self.SEARCH_URL, params=params, timeout=15)
+            resp.raise_for_status()
+            return self._parse_nlm_xml(resp.content, query)
+        except Exception as e:
+            print(f"MedlinePlus search error for '{query}': {e}")
+            return []
+
+    def fetch_by_icd10(self, icd10_code: str) -> List[MedicalDocument]:
+        """Look up MedlinePlus articles by ICD-10 code via the Connect API."""
+        params = {
+            "mainSearchCriteria.v.cs": self.ICD10_CS,
+            "mainSearchCriteria.v.c": icd10_code.upper(),
+            "knowledgeResponseType": "application/json",
+        }
+        try:
+            resp = requests.get(self.CONNECT_URL, params=params, timeout=15)
+            resp.raise_for_status()
+            data = resp.json()
+            return self._parse_connect_json(data, icd10_code)
+        except Exception as e:
+            print(f"MedlinePlus Connect error for ICD-10 '{icd10_code}': {e}")
+            return []
+
+    # ------------------------------------------------------------------
+    # Internal parsers
+    # ------------------------------------------------------------------
+
+    def _parse_nlm_xml(self, xml_bytes: bytes, query: str) -> List[MedicalDocument]:
+        """Parse NLM HealthTopics XML search results."""
+        docs = []
+        try:
+            soup = BeautifulSoup(xml_bytes, "xml")
+            for doc_elem in soup.find_all("document"):
+                url = doc_elem.get("url", "")
+                title_elem = doc_elem.find("content", {"name": "title"})
+                snippet_elem = doc_elem.find("content", {"name": "FullSummary"})
+                if not snippet_elem:
+                    snippet_elem = doc_elem.find("content", {"name": "snippet"})
+
+                title = title_elem.get_text(strip=True) if title_elem else query
+                content = snippet_elem.get_text(separator=" ", strip=True) if snippet_elem else ""
+                content = " ".join(content.split())  # normalise whitespace
+
+                if content and len(content) > 80:
+                    docs.append(MedicalDocument(
+                        content=content,
+                        title=f"MedlinePlus: {title}",
+                        source="MedlinePlus (NLM/NIH)",
+                        url=url,
+                        metadata={"query": query, "api": "nlm_healthtopics"},
+                    ))
+        except Exception as e:
+            print(f"MedlinePlus XML parse error: {e}")
+        return docs
+
+    def _parse_connect_json(self, data: dict, icd10_code: str) -> List[MedicalDocument]:
+        """Parse MedlinePlus Connect JSON response."""
+        docs = []
+        try:
+            feed = data.get("feed", {})
+            entries = feed.get("entry", [])
+            for entry in entries:
+                title = entry.get("title", {}).get("_value", icd10_code)
+                summary = entry.get("summary", {}).get("_value", "")
+                url = ""
+                for link in entry.get("link", []):
+                    if link.get("@type") == "text/html":
+                        url = link.get("@href", "")
+                        break
+                content = BeautifulSoup(summary, "html.parser").get_text(separator=" ", strip=True)
+                content = " ".join(content.split())
+                if content and len(content) > 80:
+                    docs.append(MedicalDocument(
+                        content=content,
+                        title=f"MedlinePlus: {title}",
+                        source="MedlinePlus (NLM/NIH)",
+                        url=url,
+                        metadata={"icd10_code": icd10_code, "api": "medlineplus_connect"},
+                    ))
+        except Exception as e:
+            print(f"MedlinePlus Connect JSON parse error: {e}")
+        return docs
+
+
+class OpenFDADrugLoader:
+    """
+    Fetch drug label information from the U.S. FDA's openFDA Drug Label API.
+    Free, no API key required (rate-limited at 240 requests/minute without a key,
+    or 1000/minute with a free key obtained from https://open.fda.gov/apis/authentication/).
+
+    API docs: https://open.fda.gov/apis/drug/label/
+    Endpoint:  https://api.fda.gov/drug/label.json?search=<QUERY>&limit=<N>
+
+    Each label section (indications, warnings, dosage, adverse reactions, etc.) is
+    converted into a separate MedicalDocument so retrieval targets the right section.
+
+    Usage example
+    -------------
+    loader = OpenFDADrugLoader()
+    docs = loader.search_drug("metformin", max_results=3)
+    """
+
+    BASE_URL = "https://api.fda.gov/drug/label.json"
+
+    # Label sections we extract — ordered from most to least patient-relevant.
+    # Keys match openFDA's field names in the label JSON.
+    SECTIONS = [
+        ("indications_and_usage", "Indications and Usage"),
+        ("warnings", "Warnings"),
+        ("warnings_and_cautions", "Warnings and Cautions"),
+        ("adverse_reactions", "Adverse Reactions"),
+        ("drug_interactions", "Drug Interactions"),
+        ("contraindications", "Contraindications"),
+        ("dosage_and_administration", "Dosage and Administration"),
+        ("mechanism_of_action", "Mechanism of Action"),
+        ("clinical_pharmacology", "Clinical Pharmacology"),
+        ("overdosage", "Overdosage"),
+        ("use_in_specific_populations", "Use in Specific Populations"),
+    ]
+
+    def __init__(self, api_key: Optional[str] = None):
+        self.api_key = api_key  # optional — see class docstring
+
+    def search_drug(self, drug_name: str, max_results: int = 5) -> List[MedicalDocument]:
+        """Search openFDA drug labels for a given drug name or active ingredient."""
+        # Search both brand name and generic name fields
+        search_query = (
+            f'(openfda.brand_name:"{drug_name}"+openfda.generic_name:"{drug_name}")'
+        )
+        params: Dict[str, Any] = {
+            "search": search_query,
+            "limit": max_results,
+        }
+        if self.api_key:
+            params["api_key"] = self.api_key
+
+        try:
+            resp = requests.get(self.BASE_URL, params=params, timeout=20)
+            resp.raise_for_status()
+            results = resp.json().get("results", [])
+            time.sleep(0.25)  # polite rate limiting
+        except Exception as e:
+            print(f"openFDA drug search error for '{drug_name}': {e}")
+            return []
+
+        docs = []
+        for label in results:
+            docs.extend(self._label_to_documents(label, drug_name))
+        return docs
+
+    def _label_to_documents(self, label: dict, query: str) -> List[MedicalDocument]:
+        """Convert one FDA label JSON record into multiple MedicalDocuments by section."""
+        docs = []
+        openfda = label.get("openfda", {})
+
+        # Prefer generic name, fall back to brand name, then query
+        generic_names = openfda.get("generic_name", [])
+        brand_names = openfda.get("brand_name", [])
+        drug_name = generic_names[0].title() if generic_names else (
+            brand_names[0].title() if brand_names else query.title()
+        )
+        manufacturer = openfda.get("manufacturer_name", ["Unknown"])[0]
+        application_numbers = openfda.get("application_number", [])
+        url = (
+            f"https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=overview.process&ApplNo="
+            + application_numbers[0].lstrip("NDA").lstrip("ANDA")
+            if application_numbers else "https://www.fda.gov/drugs"
+        )
+
+        for field_key, section_title in self.SECTIONS:
+            texts = label.get(field_key, [])
+            if not texts:
+                continue
+            # openFDA returns sections as a list of strings (usually one entry)
+            content = " ".join(texts)
+            # Strip residual HTML tags that some labels contain
+            content = BeautifulSoup(content, "html.parser").get_text(separator=" ", strip=True)
+            content = " ".join(content.split())
+            if len(content) < 50:
+                continue
+            # Truncate very long sections to avoid noisy chunks
+            if len(content) > 3000:
+                content = content[:3000] + "..."
+
+            docs.append(MedicalDocument(
+                content=content,
+                title=f"{drug_name} — {section_title} (FDA Label)",
+                source="FDA Drug Label (openFDA)",
+                url=url,
+                metadata={
+                    "drug_name": drug_name,
+                    "section": field_key,
+                    "manufacturer": manufacturer,
+                    "api": "openfda_drug_label",
+                },
+            ))
+        return docs
+
+
+class ClinicalTrialsLoader:
+    """
+    Fetch study summaries from ClinicalTrials.gov using their free public API v2.
+    No API key required.
+
+    API docs: https://clinicaltrials.gov/data-api/api
+    Endpoint:  https://clinicaltrials.gov/api/v2/studies?query.cond=<CONDITION>&...
+
+    We extract the study's official title, brief summary, eligibility criteria, and
+    primary outcomes — the most clinically informative fields for a RAG system — and
+    wrap each study as a MedicalDocument.
+
+    Usage example
+    -------------
+    loader = ClinicalTrialsLoader()
+    docs = loader.search("type 2 diabetes GLP-1", max_results=5, status="COMPLETED")
+    """
+
+    BASE_URL = "https://clinicaltrials.gov/api/v2/studies"
+
+    def search(
+        self,
+        condition_or_query: str,
+        max_results: int = 10,
+        status: Optional[str] = "COMPLETED",
+        min_enrollment: int = 50,
+    ) -> List[MedicalDocument]:
+        """
+        Search ClinicalTrials.gov by condition, intervention, or free-text query.
+
+        Parameters
+        ----------
+        condition_or_query : str
+            Condition name, drug name, or free-text query.
+        max_results : int
+            Maximum studies to fetch (capped at 100 per API call).
+        status : str or None
+            Filter by study status. Common values: "COMPLETED", "RECRUITING",
+            "ACTIVE_NOT_RECRUITING". Pass None to skip the filter.
+        min_enrollment : int
+            Skip studies with fewer participants than this (reduces noise from tiny studies).
+        """
+        params: Dict[str, Any] = {
+            "query.cond": condition_or_query,
+            "pageSize": min(max_results, 100),
+            "format": "json",
+            "fields": (
+                "NCTId,BriefTitle,OfficialTitle,BriefSummary,"
+                "EligibilityCriteria,PrimaryOutcomeMeasure,"
+                "OverallStatus,EnrollmentCount,StartDate,CompletionDate,"
+                "Condition,InterventionName,LeadSponsorName"
+            ),
+        }
+        if status:
+            params["filter.overallStatus"] = status
+
+        try:
+            resp = requests.get(self.BASE_URL, params=params, timeout=20)
+            resp.raise_for_status()
+            studies = resp.json().get("studies", [])
+            time.sleep(0.3)
+        except Exception as e:
+            print(f"ClinicalTrials.gov search error for '{condition_or_query}': {e}")
+            return []
+
+        docs = []
+        for study in studies:
+            doc = self._study_to_document(study, condition_or_query, min_enrollment)
+            if doc:
+                docs.append(doc)
+        return docs
+
+    def _study_to_document(
+        self,
+        study: dict,
+        query: str,
+        min_enrollment: int,
+    ) -> Optional[MedicalDocument]:
+        """Convert one ClinicalTrials.gov study JSON to a MedicalDocument."""
+        # The v2 API nests fields under protocolSection
+        ps = study.get("protocolSection", study)  # handle both flat and nested
+        id_module = ps.get("identificationModule", {})
+        desc_module = ps.get("descriptionModule", {})
+        status_module = ps.get("statusModule", {})
+        elig_module = ps.get("eligibilityModule", {})
+        outcomes_module = ps.get("outcomesModule", {})
+        design_module = ps.get("designModule", {})
+        arms_module = ps.get("armsInterventionsModule", {})
+        sponsor_module = ps.get("sponsorCollaboratorsModule", {})
+
+        nct_id = id_module.get("nctId", "")
+        title = id_module.get("officialTitle") or id_module.get("briefTitle") or nct_id
+        brief_summary = desc_module.get("briefSummary", "").strip()
+
+        # Enrollment filter
+        enroll_info = design_module.get("enrollmentInfo", {})
+        enrollment = enroll_info.get("count", 0) if isinstance(enroll_info, dict) else 0
+        if enrollment and enrollment < min_enrollment:
+            return None
+
+        if not brief_summary or len(brief_summary) < 60:
+            return None
+
+        # Build a rich content block from multiple sections
+        sections = [f"Study: {title}", f"Summary: {brief_summary}"]
+
+        status = status_module.get("overallStatus", "")
+        start = status_module.get("startDateStruct", {}).get("date") or status_module.get("startDate", "")
+        end = status_module.get("completionDateStruct", {}).get("date") or status_module.get("completionDate", "")
+        if status:
+            sections.append(f"Status: {status}" + (f" (started {start}, ended {end})" if start else ""))
+
+        conditions = ps.get("conditionsModule", {}).get("conditions", [])
+        if conditions:
+            sections.append("Conditions: " + "; ".join(conditions[:5]))
+
+        interventions = [
+            i.get("name", "") for i in arms_module.get("interventions", []) if i.get("name")
+        ]
+        if interventions:
+            sections.append("Interventions: " + "; ".join(interventions[:5]))
+
+        primary_outcomes = [
+            o.get("measure", "") for o in outcomes_module.get("primaryOutcomes", []) if o.get("measure")
+        ]
+        if primary_outcomes:
+            sections.append("Primary Outcomes: " + "; ".join(primary_outcomes[:3]))
+
+        eligibility = elig_module.get("eligibilityCriteria", "")
+        if eligibility:
+            # Truncate overly long eligibility text
+            sections.append("Eligibility: " + eligibility[:600] + ("..." if len(eligibility) > 600 else ""))
+
+        sponsor = sponsor_module.get("leadSponsor", {}).get("name", "")
+        if sponsor:
+            sections.append(f"Lead sponsor: {sponsor}")
+
+        content = "\n".join(sections)
+        year = start[:4] if start and len(start) >= 4 else None
+
+        return MedicalDocument(
+            content=content,
+            title=f"ClinicalTrial ({nct_id}): {title[:100]}",
+            source="ClinicalTrials.gov",
+            year=year,
+            url=f"https://clinicaltrials.gov/study/{nct_id}" if nct_id else "https://clinicaltrials.gov",
+            metadata={
+                "nct_id": nct_id,
+                "status": status,
+                "enrollment": enrollment,
+                "query": query,
+                "api": "clinicaltrials_v2",
+            },
+        )

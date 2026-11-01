@@ -1,0 +1,918 @@
+{
+  "index_integrity": {
+    "total_chunks": 6718,
+    "unique_docs": 3473,
+    "dimension": 768,
+    "embedding_model": "BAAI/bge-base-en-v1.5",
+    "use_bge_prefix": true,
+    "avg_chunk_chars": 783,
+    "chunk_size": 256,
+    "chunk_overlap": 40,
+    "checks": {
+      "chunk_count_plausible": true,
+      "dimension_768": true,
+      "bge_model": true,
+      "bge_prefix_enabled": true,
+      "no_empty_chunks": true
+    },
+    "passed": true
+  },
+  "retrieval": {
+    "n_corpus_cases": 60,
+    "n_abstain_cases": 4,
+    "avg_top1_score": 0.7575,
+    "avg_avg_score": 0.7224,
+    "corpus_hit_rate": 0.783,
+    "html_contamination_total": 0,
+    "abstain_retrieval_correct": 4,
+    "abstain_retrieval_total": 4,
+    "per_category": {
+      "symptoms": {
+        "n": 20,
+        "avg_top1": 0.8057,
+        "min_top1": 0.7219
+      },
+      "drug": {
+        "n": 6,
+        "avg_top1": 0.7282,
+        "min_top1": 0.6895
+      },
+      "management": {
+        "n": 12,
+        "avg_top1": 0.7248,
+        "min_top1": 0.6853
+      },
+      "diagnostic": {
+        "n": 7,
+        "avg_top1": 0.7204,
+        "min_top1": 0.6812
+      },
+      "emergency": {
+        "n": 5,
+        "avg_top1": 0.7341,
+        "min_top1": 0.6871
+      },
+      "mechanism": {
+        "n": 4,
+        "avg_top1": 0.7736,
+        "min_top1": 0.7136
+      },
+      "ambiguous": {
+        "n": 4,
+        "avg_top1": 0.749,
+        "min_top1": 0.6989
+      },
+      "conflicting": {
+        "n": 1,
+        "avg_top1": 0.6714,
+        "min_top1": 0.6714
+      },
+      "edge_corpus": {
+        "n": 1,
+        "avg_top1": 0.7928,
+        "min_top1": 0.7928
+      }
+    },
+    "per_query": {
+      "SYM-001": {
+        "question": "What are the symptoms of type 2 diabetes?",
+        "category": "symptoms",
+        "n_results": 5,
+        "top1_score": 0.8518,
+        "avg_score": 0.8018,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 755,
+        "url_count": 3
+      },
+      "SYM-002": {
+        "question": "What are the warning signs of a heart attack?",
+        "category": "symptoms",
+        "n_results": 5,
+        "top1_score": 0.7661,
+        "avg_score": 0.7602,
+        "corpus_hit": true,
+        "diversity": 0.8,
+        "html_count": 0,
+        "ctx_tokens": 980,
+        "url_count": 4
+      },
+      "SYM-003": {
+        "question": "What are the symptoms of iron deficiency anemia?",
+        "category": "symptoms",
+        "n_results": 5,
+        "top1_score": 0.8739,
+        "avg_score": 0.818,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 660,
+        "url_count": 3
+      },
+      "SYM-004": {
+        "question": "What are the symptoms of hypothyroidism?",
+        "category": "symptoms",
+        "n_results": 5,
+        "top1_score": 0.8629,
+        "avg_score": 0.8233,
+        "corpus_hit": true,
+        "diversity": 0.8,
+        "html_count": 0,
+        "ctx_tokens": 611,
+        "url_count": 3
+      },
+      "SYM-005": {
+        "question": "How does dengue fever present clinically?",
+        "category": "symptoms",
+        "n_results": 5,
+        "top1_score": 0.7219,
+        "avg_score": 0.6908,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 903,
+        "url_count": 4
+      },
+      "SYM-006": {
+        "question": "What are the symptoms of sepsis?",
+        "category": "symptoms",
+        "n_results": 5,
+        "top1_score": 0.7834,
+        "avg_score": 0.7058,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 1014,
+        "url_count": 4
+      },
+      "SYM-007": {
+        "question": "What are the signs and symptoms of anaphylaxis?",
+        "category": "symptoms",
+        "n_results": 5,
+        "top1_score": 0.7791,
+        "avg_score": 0.7257,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 971,
+        "url_count": 4
+      },
+      "SYM-008": {
+        "question": "What symptoms does chronic kidney disease cause?",
+        "category": "symptoms",
+        "n_results": 5,
+        "top1_score": 0.8166,
+        "avg_score": 0.7428,
+        "corpus_hit": true,
+        "diversity": 0.8,
+        "html_count": 0,
+        "ctx_tokens": 798,
+        "url_count": 4
+      },
+      "SYM-009": {
+        "question": "What are the symptoms of asthma?",
+        "category": "symptoms",
+        "n_results": 5,
+        "top1_score": 0.8323,
+        "avg_score": 0.8102,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 801,
+        "url_count": 3
+      },
+      "SYM-010": {
+        "question": "What are the classic features of a gout attack?",
+        "category": "symptoms",
+        "n_results": 5,
+        "top1_score": 0.7481,
+        "avg_score": 0.7212,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 811,
+        "url_count": 3
+      },
+      "SYM-011": {
+        "question": "What are the symptoms of major depression?",
+        "category": "symptoms",
+        "n_results": 5,
+        "top1_score": 0.7585,
+        "avg_score": 0.7448,
+        "corpus_hit": true,
+        "diversity": 0.8,
+        "html_count": 0,
+        "ctx_tokens": 946,
+        "url_count": 3
+      },
+      "SYM-012": {
+        "question": "How does rheumatoid arthritis differ from osteoarthritis in terms of symptoms?",
+        "category": "symptoms",
+        "n_results": 5,
+        "top1_score": 0.8037,
+        "avg_score": 0.7719,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 695,
+        "url_count": 1
+      },
+      "DRUG-004": {
+        "question": "What is the treatment for opioid overdose?",
+        "category": "drug",
+        "n_results": 5,
+        "top1_score": 0.7037,
+        "avg_score": 0.6766,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 555,
+        "url_count": 4
+      },
+      "DRUG-005": {
+        "question": "What drugs are used to treat tuberculosis?",
+        "category": "drug",
+        "n_results": 5,
+        "top1_score": 0.6895,
+        "avg_score": 0.6772,
+        "corpus_hit": true,
+        "diversity": 0.8,
+        "html_count": 0,
+        "ctx_tokens": 966,
+        "url_count": 4
+      },
+      "DRUG-006": {
+        "question": "What medication is first-line treatment for an acute gout attack?",
+        "category": "drug",
+        "n_results": 5,
+        "top1_score": 0.7487,
+        "avg_score": 0.7323,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 762,
+        "url_count": 4
+      },
+      "DRUG-007": {
+        "question": "How is hypothyroidism treated?",
+        "category": "drug",
+        "n_results": 5,
+        "top1_score": 0.7324,
+        "avg_score": 0.7238,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 997,
+        "url_count": 5
+      },
+      "MGMT-001": {
+        "question": "How is hypertension treated and managed?",
+        "category": "management",
+        "n_results": 5,
+        "top1_score": 0.6997,
+        "avg_score": 0.6882,
+        "corpus_hit": false,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 951,
+        "url_count": 5
+      },
+      "MGMT-002": {
+        "question": "How is asthma managed in clinical practice?",
+        "category": "management",
+        "n_results": 5,
+        "top1_score": 0.6952,
+        "avg_score": 0.6867,
+        "corpus_hit": false,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 765,
+        "url_count": 5
+      },
+      "MGMT-003": {
+        "question": "What are the treatment options for major depression?",
+        "category": "management",
+        "n_results": 5,
+        "top1_score": 0.7113,
+        "avg_score": 0.7043,
+        "corpus_hit": false,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 997,
+        "url_count": 5
+      },
+      "MGMT-004": {
+        "question": "How is type 2 diabetes managed?",
+        "category": "management",
+        "n_results": 5,
+        "top1_score": 0.7745,
+        "avg_score": 0.7199,
+        "corpus_hit": false,
+        "diversity": 0.8,
+        "html_count": 0,
+        "ctx_tokens": 744,
+        "url_count": 5
+      },
+      "MGMT-005": {
+        "question": "How is GERD treated?",
+        "category": "management",
+        "n_results": 5,
+        "top1_score": 0.7443,
+        "avg_score": 0.7294,
+        "corpus_hit": true,
+        "diversity": 0.6,
+        "html_count": 0,
+        "ctx_tokens": 807,
+        "url_count": 4
+      },
+      "MGMT-006": {
+        "question": "What is the treatment for celiac disease?",
+        "category": "management",
+        "n_results": 5,
+        "top1_score": 0.7904,
+        "avg_score": 0.7686,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 867,
+        "url_count": 5
+      },
+      "MGMT-007": {
+        "question": "How is COPD managed?",
+        "category": "management",
+        "n_results": 5,
+        "top1_score": 0.6853,
+        "avg_score": 0.6794,
+        "corpus_hit": true,
+        "diversity": 0.6,
+        "html_count": 0,
+        "ctx_tokens": 1058,
+        "url_count": 4
+      },
+      "DIAG-001": {
+        "question": "What does a high HbA1c level indicate?",
+        "category": "diagnostic",
+        "n_results": 5,
+        "top1_score": 0.6872,
+        "avg_score": 0.6676,
+        "corpus_hit": false,
+        "diversity": 0.8,
+        "html_count": 0,
+        "ctx_tokens": 1133,
+        "url_count": 5
+      },
+      "DIAG-002": {
+        "question": "What lab tests are used to diagnose anemia?",
+        "category": "diagnostic",
+        "n_results": 5,
+        "top1_score": 0.6812,
+        "avg_score": 0.6715,
+        "corpus_hit": false,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 1035,
+        "url_count": 5
+      },
+      "DIAG-003": {
+        "question": "How is hypothyroidism diagnosed?",
+        "category": "diagnostic",
+        "n_results": 5,
+        "top1_score": 0.7094,
+        "avg_score": 0.7005,
+        "corpus_hit": true,
+        "diversity": 0.8,
+        "html_count": 0,
+        "ctx_tokens": 916,
+        "url_count": 3
+      },
+      "DIAG-004": {
+        "question": "What is the diagnostic test for osteoporosis?",
+        "category": "diagnostic",
+        "n_results": 5,
+        "top1_score": 0.7262,
+        "avg_score": 0.6986,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 852,
+        "url_count": 4
+      },
+      "DIAG-005": {
+        "question": "How is tuberculosis diagnosed?",
+        "category": "diagnostic",
+        "n_results": 5,
+        "top1_score": 0.7167,
+        "avg_score": 0.6987,
+        "corpus_hit": true,
+        "diversity": 0.6,
+        "html_count": 0,
+        "ctx_tokens": 1152,
+        "url_count": 4
+      },
+      "EMER-001": {
+        "question": "What should I do if someone is having a stroke?",
+        "category": "emergency",
+        "n_results": 5,
+        "top1_score": 0.7689,
+        "avg_score": 0.7515,
+        "corpus_hit": false,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 1145,
+        "url_count": 5
+      },
+      "EMER-002": {
+        "question": "What is the first-aid response for anaphylaxis?",
+        "category": "emergency",
+        "n_results": 5,
+        "top1_score": 0.7461,
+        "avg_score": 0.7236,
+        "corpus_hit": true,
+        "diversity": 0.8,
+        "html_count": 0,
+        "ctx_tokens": 862,
+        "url_count": 4
+      },
+      "EMER-003": {
+        "question": "I think I am having a heart attack. What should I do right now?",
+        "category": "emergency",
+        "n_results": 5,
+        "top1_score": 0.7466,
+        "avg_score": 0.696,
+        "corpus_hit": true,
+        "diversity": 0.6,
+        "html_count": 0,
+        "ctx_tokens": 1107,
+        "url_count": 4
+      },
+      "EMER-004": {
+        "question": "What should I do if someone has a seizure?",
+        "category": "emergency",
+        "n_results": 5,
+        "top1_score": 0.722,
+        "avg_score": 0.6823,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 881,
+        "url_count": 4
+      },
+      "EMER-005": {
+        "question": "How do I recognize and treat hypothermia?",
+        "category": "emergency",
+        "n_results": 5,
+        "top1_score": 0.6871,
+        "avg_score": 0.609,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 1145,
+        "url_count": 4
+      },
+      "MECH-001": {
+        "question": "How does HIV damage the immune system?",
+        "category": "mechanism",
+        "n_results": 5,
+        "top1_score": 0.7824,
+        "avg_score": 0.7585,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 1131,
+        "url_count": 4
+      },
+      "MECH-002": {
+        "question": "Why does vitamin D deficiency cause bone disease?",
+        "category": "mechanism",
+        "n_results": 5,
+        "top1_score": 0.841,
+        "avg_score": 0.8109,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 837,
+        "url_count": 3
+      },
+      "MECH-004": {
+        "question": "Why do patients with type 2 diabetes develop complications like retinopathy and ",
+        "category": "mechanism",
+        "n_results": 5,
+        "top1_score": 0.7136,
+        "avg_score": 0.7043,
+        "corpus_hit": true,
+        "diversity": 0.8,
+        "html_count": 0,
+        "ctx_tokens": 907,
+        "url_count": 4
+      },
+      "AMBIG-002": {
+        "question": "Is my chest pain serious?",
+        "category": "ambiguous",
+        "n_results": 5,
+        "top1_score": 0.6989,
+        "avg_score": 0.6696,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 911,
+        "url_count": 4
+      },
+      "AMBIG-003": {
+        "question": "What are common causes of headache?",
+        "category": "ambiguous",
+        "n_results": 5,
+        "top1_score": 0.7936,
+        "avg_score": 0.7472,
+        "corpus_hit": true,
+        "diversity": 0.8,
+        "html_count": 0,
+        "ctx_tokens": 888,
+        "url_count": 3
+      },
+      "AMBIG-005": {
+        "question": "What is the difference between a cold and the flu?",
+        "category": "ambiguous",
+        "n_results": 5,
+        "top1_score": 0.7675,
+        "avg_score": 0.7644,
+        "corpus_hit": true,
+        "diversity": 0.8,
+        "html_count": 0,
+        "ctx_tokens": 893,
+        "url_count": 3
+      },
+      "CONFL-003": {
+        "question": "Are antidepressants effective?",
+        "category": "conflicting",
+        "n_results": 5,
+        "top1_score": 0.6714,
+        "avg_score": 0.6567,
+        "corpus_hit": true,
+        "diversity": 0.8,
+        "html_count": 0,
+        "ctx_tokens": 890,
+        "url_count": 5
+      },
+      "EDGE-003": {
+        "question": "What is the recommended dose of semaglutide for weight loss?",
+        "category": "edge_corpus",
+        "n_results": 5,
+        "top1_score": 0.7928,
+        "avg_score": 0.7643,
+        "corpus_hit": false,
+        "diversity": 0.6,
+        "html_count": 0,
+        "ctx_tokens": 946,
+        "url_count": 5
+      },
+      "SYM-013": {
+        "question": "What are the symptoms of vertigo?",
+        "category": "symptoms",
+        "n_results": 5,
+        "top1_score": 0.836,
+        "avg_score": 0.7334,
+        "corpus_hit": true,
+        "diversity": 0.8,
+        "html_count": 0,
+        "ctx_tokens": 904,
+        "url_count": 3
+      },
+      "SYM-014": {
+        "question": "What are the symptoms of PCOS?",
+        "category": "symptoms",
+        "n_results": 5,
+        "top1_score": 0.8202,
+        "avg_score": 0.7789,
+        "corpus_hit": true,
+        "diversity": 0.4,
+        "html_count": 0,
+        "ctx_tokens": 1112,
+        "url_count": 4
+      },
+      "DRUG-008": {
+        "question": "What is the treatment for HIV?",
+        "category": "drug",
+        "n_results": 5,
+        "top1_score": 0.7539,
+        "avg_score": 0.7265,
+        "corpus_hit": false,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 1125,
+        "url_count": 5
+      },
+      "MGMT-008": {
+        "question": "How is IBS managed?",
+        "category": "management",
+        "n_results": 5,
+        "top1_score": 0.6887,
+        "avg_score": 0.6659,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 741,
+        "url_count": 3
+      },
+      "MGMT-009": {
+        "question": "How is insomnia treated?",
+        "category": "management",
+        "n_results": 5,
+        "top1_score": 0.7353,
+        "avg_score": 0.6797,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 800,
+        "url_count": 3
+      },
+      "MECH-005": {
+        "question": "Why does psoriasis cause skin plaques?",
+        "category": "mechanism",
+        "n_results": 5,
+        "top1_score": 0.7573,
+        "avg_score": 0.7397,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 809,
+        "url_count": 3
+      },
+      "SYM-015": {
+        "question": "What are the symptoms of vitamin B12 deficiency?",
+        "category": "symptoms",
+        "n_results": 5,
+        "top1_score": 0.8334,
+        "avg_score": 0.7494,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 722,
+        "url_count": 2
+      },
+      "DIAG-006": {
+        "question": "How is celiac disease diagnosed?",
+        "category": "diagnostic",
+        "n_results": 5,
+        "top1_score": 0.7862,
+        "avg_score": 0.7705,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 1098,
+        "url_count": 4
+      },
+      "SYM-016": {
+        "question": "What are the warning signs of appendicitis?",
+        "category": "symptoms",
+        "n_results": 5,
+        "top1_score": 0.7673,
+        "avg_score": 0.7025,
+        "corpus_hit": true,
+        "diversity": 0.8,
+        "html_count": 0,
+        "ctx_tokens": 751,
+        "url_count": 3
+      },
+      "MGMT-010": {
+        "question": "What lifestyle changes help with obesity?",
+        "category": "management",
+        "n_results": 5,
+        "top1_score": 0.6864,
+        "avg_score": 0.6819,
+        "corpus_hit": false,
+        "diversity": 0.8,
+        "html_count": 0,
+        "ctx_tokens": 1165,
+        "url_count": 5
+      },
+      "AMBIG-007": {
+        "question": "Can stress cause physical illness?",
+        "category": "ambiguous",
+        "n_results": 5,
+        "top1_score": 0.7358,
+        "avg_score": 0.6796,
+        "corpus_hit": false,
+        "diversity": 0.6,
+        "html_count": 0,
+        "ctx_tokens": 884,
+        "url_count": 4
+      },
+      "DIAG-007": {
+        "question": "What blood test is used to diagnose hypothyroidism?",
+        "category": "diagnostic",
+        "n_results": 5,
+        "top1_score": 0.7361,
+        "avg_score": 0.7149,
+        "corpus_hit": false,
+        "diversity": 0.6,
+        "html_count": 0,
+        "ctx_tokens": 1001,
+        "url_count": 5
+      },
+      "SYM-017": {
+        "question": "What are the symptoms of panic disorder?",
+        "category": "symptoms",
+        "n_results": 5,
+        "top1_score": 0.8592,
+        "avg_score": 0.7925,
+        "corpus_hit": true,
+        "diversity": 0.8,
+        "html_count": 0,
+        "ctx_tokens": 889,
+        "url_count": 3
+      },
+      "SYM-018": {
+        "question": "What are the symptoms of measles?",
+        "category": "symptoms",
+        "n_results": 5,
+        "top1_score": 0.8129,
+        "avg_score": 0.7221,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 968,
+        "url_count": 3
+      },
+      "SYM-019": {
+        "question": "What are the early symptoms of cirrhosis?",
+        "category": "symptoms",
+        "n_results": 5,
+        "top1_score": 0.7913,
+        "avg_score": 0.7216,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 1141,
+        "url_count": 4
+      },
+      "MGMT-011": {
+        "question": "How is opioid use disorder treated?",
+        "category": "management",
+        "n_results": 5,
+        "top1_score": 0.7585,
+        "avg_score": 0.6764,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 577,
+        "url_count": 4
+      },
+      "DRUG-009": {
+        "question": "What medications are used to treat COPD?",
+        "category": "drug",
+        "n_results": 5,
+        "top1_score": 0.741,
+        "avg_score": 0.7206,
+        "corpus_hit": false,
+        "diversity": 0.6,
+        "html_count": 0,
+        "ctx_tokens": 935,
+        "url_count": 5
+      },
+      "SYM-020": {
+        "question": "What are the signs of dehydration in an infant?",
+        "category": "symptoms",
+        "n_results": 5,
+        "top1_score": 0.7949,
+        "avg_score": 0.6934,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 941,
+        "url_count": 4
+      },
+      "MGMT-012": {
+        "question": "How is community-acquired pneumonia treated?",
+        "category": "management",
+        "n_results": 5,
+        "top1_score": 0.7281,
+        "avg_score": 0.7157,
+        "corpus_hit": true,
+        "diversity": 1.0,
+        "html_count": 0,
+        "ctx_tokens": 911,
+        "url_count": 5
+      }
+    },
+    "abstention_retrieval": {
+      "ABS-OOP-001": {
+        "question": "What is the capital of France?",
+        "category": "abstain_oop",
+        "max_retrieval_score": 0.4796,
+        "correctly_low": true
+      },
+      "ABS-OOP-002": {
+        "question": "What is the best stock to invest in right now?",
+        "category": "abstain_oop",
+        "max_retrieval_score": 0.4849,
+        "correctly_low": true
+      },
+      "ABS-OOP-003": {
+        "question": "Write me a poem about spring flowers.",
+        "category": "abstain_oop",
+        "max_retrieval_score": 0.5091,
+        "correctly_low": true
+      },
+      "ABS-OOP-004": {
+        "question": "What is the weather like in London today?",
+        "category": "abstain_oop",
+        "max_retrieval_score": 0.477,
+        "correctly_low": true
+      }
+    }
+  },
+  "citation_format": {
+    "all_passed": true,
+    "cases": [
+      {
+        "answer_snippet": "Answer [DOC_1] and also [DOC_3].",
+        "expected": [
+          1,
+          3
+        ],
+        "found": [
+          1,
+          3
+        ],
+        "passed": true
+      },
+      {
+        "answer_snippet": "No citations here.",
+        "expected": [],
+        "found": [],
+        "passed": true
+      },
+      {
+        "answer_snippet": "[DOC_2], [DOC_4], [DOC_6] multiple",
+        "expected": [
+          2,
+          4,
+          6
+        ],
+        "found": [
+          2,
+          4,
+          6
+        ],
+        "passed": true
+      },
+      {
+        "answer_snippet": "[DOC_99] out of range for 5 docs",
+        "expected": [
+          99
+        ],
+        "found": [
+          99
+        ],
+        "passed": true
+      },
+      {
+        "answer_snippet": "",
+        "expected": [],
+        "found": [],
+        "passed": true
+      }
+    ]
+  },
+  "confidence_normalisation": {
+    "all_passed": true,
+    "checks": {
+      "at_threshold_is_0": true,
+      "at_ceiling_is_1": true,
+      "above_ceiling_capped": true,
+      "below_threshold_is_0": true,
+      "ce_zero_near_half": true,
+      "ce_positive_above_half": true
+    }
+  },
+  "answer_cleaning": {
+    "all_passed": true,
+    "cases": [
+      {
+        "input_snippet": "Some answer text.",
+        "has_disclaimer": true,
+        "disclaimer_count": 1,
+        "passed": true
+      },
+      {
+        "input_snippet": "Some answer.\n\n\u26a0\ufe0f This information is for educational purpose",
+        "has_disclaimer": true,
+        "disclaimer_count": 1,
+        "passed": true
+      },
+      {
+        "input_snippet": "Answer text.\n\nSources: [DOC_1] Title\n  URL: http://example.c",
+        "has_disclaimer": true,
+        "disclaimer_count": 1,
+        "passed": true
+      },
+      {
+        "input_snippet": "",
+        "has_disclaimer": false,
+        "disclaimer_count": 0,
+        "passed": true
+      }
+    ]
+  }
+}

@@ -1,4 +1,4 @@
-FROM python:3.10-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
@@ -17,9 +17,6 @@ COPY . .
 # Create necessary directories
 RUN mkdir -p data/raw_documents data/vector_store data/processed
 
-# Run data ingestion with sample data
-RUN python scripts/ingest_data.py --source sample
-
 # Expose port
 EXPOSE 8000
 
@@ -27,5 +24,7 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD python -c "import requests; requests.get('http://localhost:8000/health')" || exit 1
 
-# Run application
-CMD ["python", "-m", "src.api"]
+# Run application — use gunicorn with a single uvicorn worker.
+# Single worker avoids shared-memory races with the FAISS index and keeps
+# memory below the 512 MB limit on Render free tier.
+CMD ["gunicorn", "src.api:app", "--workers", "1", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--timeout", "120"]

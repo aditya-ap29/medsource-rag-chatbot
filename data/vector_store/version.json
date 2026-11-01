@@ -1,0 +1,31 @@
+{
+  "version": "v1",
+  "build_mode": "full",
+  "created_at": "2026-10-18T07:38:59.080770+00:00",
+  "embedding_model": "BAAI/bge-base-en-v1.5",
+  "embedding_dimension": 768,
+  "index_type": "IndexFlatIP",
+  "normalisation": "L2",
+  "use_bge_prefix": true,
+  "chunk_size_tokens": 256,
+  "chunk_overlap_tokens": 40,
+  "source_corpus_file": "D:\\Project\\medintel-rag-chatbot-streamlit (1)\\data\\processed\\clean_corpus_v1.json",
+  "source_corpus_hash": "eee1ebde36b071de",
+  "total_chunks": 6718,
+  "unique_doc_ids": 3473,
+  "avg_chunk_chars": 783,
+  "source_distribution": {
+    "PubMed": 3159,
+    "MedlinePlus (NLM/NIH)": 1148,
+    "FDA Drug Label (openFDA)": 2059,
+    "ClinicalTrials.gov": 248,
+    "Patient Education Summary": 98,
+    "Harrison's Internal Medicine": 1,
+    "Mayo Clinic Medical Reference": 1,
+    "World Health Organization Guidelines": 1,
+    "American Heart Association Guidelines": 1,
+    "NIH National Institute of Neurological Disorders": 1,
+    "Journal of Respiratory Medicine": 1
+  },
+  "build_time_s": 2273.1
+}

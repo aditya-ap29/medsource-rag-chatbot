@@ -1,5 +1,5 @@
 """
-FastAPI backend for MedSource Medical RAG Chatbot
+FastAPI backend for MedSource Medical RAG Chatbot (Gemini-only)
 """
 import os
 import logging
@@ -19,8 +19,6 @@ from src.models import (
     QueryRequest,
     QueryResponse,
     HealthResponse,
-    EvaluationRequest,
-    EvaluationResponse
 )
 from src.vector_store import VectorStore
 from src.rag_pipeline import RAGPipeline
@@ -56,80 +54,72 @@ async def verify_api_key(provided_key: Optional[str] = Security(api_key_header))
 async def lifespan(app: FastAPI):
     """Initialize and cleanup resources"""
     global vector_store, rag_pipeline
-    
-    print("=" * 60)
-    print("🚀 Starting MedSource Medical RAG Chatbot")
-    print("=" * 60)
-    
+
+    logger.info("Starting MedSource Medical RAG Chatbot")
+
     try:
         # Initialize vector store
-        print("\n📚 Loading vector store...")
+        logger.info("Loading vector store...")
         vector_store = VectorStore(
             embedding_model_name=settings.embedding_model,
             chunk_size=settings.chunk_size,
-            chunk_overlap=settings.chunk_overlap
+            chunk_overlap=settings.chunk_overlap,
+            embedding_batch_size=settings.embedding_batch_size
         )
-        
+
         # Try to load existing vector store
         if os.path.exists(settings.vector_store_path):
             vector_store.load(settings.vector_store_path)
-            print(f"✅ Vector store loaded successfully")
             stats = vector_store.get_stats()
-            print(f"   - Total chunks: {stats['total_chunks']}")
-            print(f"   - Unique documents: {stats['unique_documents']}")
+            logger.info(
+                "Vector store loaded: %d chunks, %d unique documents",
+                stats["total_chunks"], stats["unique_documents"],
+            )
         else:
-            print("⚠️  No existing vector store found. Please run the ingestion script first.")
-            print(f"   Expected path: {settings.vector_store_path}")
-        
+            logger.warning(
+                "No existing vector store found at %s. "
+                "Please run the ingestion script first.",
+                settings.vector_store_path,
+            )
+
         # Initialize RAG pipeline
-        print("\n🤖 Initializing RAG pipeline...")
-        
-        # Determine LLM provider from settings
-        llm_provider = settings.llm_provider.lower()
-        model_name = None
-        api_key = None
-        
-        if llm_provider == "gemini":
-            model_name = settings.llm_model or "gemini-2.0-flash"
-            api_key = settings.gemini_api_key
-            print(f"   Using Google Gemini ({model_name})")
-        elif llm_provider == "mistral":
-            model_name = "mistralai/Mistral-7B-Instruct-v0.2"
-            print(f"   Using Mistral 7B (Open Source)")
-        elif llm_provider == "qwen":
-            model_name = "Qwen/Qwen1.5-7B-Chat"
-            print(f"   Using Qwen 1.5 7B Chat (Open Source)")
-        else:
-            llm_provider = "openai"
-            model_name = settings.llm_model
-            api_key = settings.openai_api_key
-            print(f"   Using OpenAI {model_name}")
-        
+        logger.info("Initializing RAG pipeline...")
+
+        model_name = settings.llm_model or "gemini-2.0-flash"
+        api_key = settings.gemini_api_key
+        logger.info("LLM: Google Gemini (%s)", model_name)
+
         rag_pipeline = RAGPipeline(
             vector_store=vector_store,
-            llm_provider=llm_provider,
             model_name=model_name,
             api_key=api_key,
             temperature=settings.llm_temperature,
             max_tokens=settings.max_tokens,
             top_k=settings.top_k_documents,
             confidence_threshold=settings.retrieval_confidence_threshold,
-            enable_general_fallback=settings.enable_general_fallback
+            enable_general_fallback=settings.enable_general_fallback,
+            enable_query_expansion=settings.enable_query_expansion,
+            enable_reranker=settings.enable_reranker,
+            reranker_model=settings.reranker_model,
+            enable_live_pubmed=settings.enable_live_pubmed,
+            pubmed_email=settings.pubmed_email,
+            ncbi_api_key=settings.ncbi_api_key,
+            live_pubmed_timeout_s=settings.live_pubmed_timeout_s,
+            live_pubmed_max_results=settings.live_pubmed_max_results,
         )
-        
-        print("✅ RAG pipeline initialized successfully")
-        print("\n" + "=" * 60)
-        print(f"🎯 API Server ready at http://{settings.api_host}:{settings.api_port}")
-        print("=" * 60 + "\n")
-        
+
+        logger.info(
+            "RAG pipeline ready — API serving at http://%s:%s",
+            settings.api_host, settings.api_port,
+        )
+
     except Exception as e:
-        print(f"\n❌ Error during initialization: {e}")
-        print("   The API will start but may not function correctly.\n")
-    
+        logger.exception("Error during initialization: %s — API will start but may not function correctly.", e)
+
     yield
-    
+
     # Cleanup
-    print("\n🛑 Shutting down MedSource...")
+    logger.info("Shutting down MedSource...")
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -139,19 +129,12 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Rate limiting -- protects both your server and your (limited, free-tier)
-# LLM quota from being burned by repeated/automated requests. Limits are
-# per client IP. Tune via settings if needed.
+# Rate limiting — per client IP; tune via settings if needed.
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# Add CORS middleware
-# NOTE: allow_origins=["*"] combined with allow_credentials=True is a known-bad
-# combination (browsers reject it, and it signals no real origin policy).
-# Set ALLOWED_ORIGINS in .env as a comma-separated list of real frontend URLs,
-# e.g. "http://localhost:8501,https://your-frontend.com". Defaults to localhost
-# only, which is safe for local development.
+# CORS — set ALLOWED_ORIGINS in .env as comma-separated frontend URLs.
 allowed_origins = [o.strip() for o in settings.allowed_origins.split(",") if o.strip()]
 
 app.add_middleware(
@@ -190,15 +173,24 @@ async def health_check():
 @limiter.limit("10/minute")
 async def query_endpoint(request: Request, query_request: QueryRequest):
     """
-    Query the medical RAG system - Hack-A-Cure competition format
-    
-    Request:
-    - **query**: The medical question to answer (required)
-    - **top_k**: Number of context snippets to retrieve (required, 1-20)
-    
-    Response:
-    - **answer**: Generated answer with inline citations
-    - **contexts**: Array of plain text context snippets
+    Answer a medical question using Retrieval-Augmented Generation.
+
+    Retrieves the most relevant passages from the indexed document corpus,
+    re-ranks them (if enabled), and generates a grounded answer with inline
+    `[DOC_X]` citations. When no verified source passes the confidence
+    threshold the answer is clearly labeled as general knowledge.
+
+    **Request fields**
+    - `query`: the medical question (required, min 1 character)
+    - `top_k`: number of context passages to retrieve (1–20, default 5)
+    - `history`: optional prior conversation turns for multi-turn dialogue
+
+    **Response fields**
+    - `answer`: generated answer with inline `[DOC_X]` citations
+    - `contexts`: retrieved passage texts (plain strings, for RAGAS evaluation)
+    - `sources`: structured source metadata with relevance scores
+    - `confidence`: overall retrieval confidence (0–1)
+    - `warning`: medical disclaimer or low-confidence notice
     """
     if not rag_pipeline:
         raise HTTPException(
@@ -219,11 +211,12 @@ async def query_endpoint(request: Request, query_request: QueryRequest):
         # Call RAG pipeline
         response = rag_pipeline.query(
             question=question,
-            top_k=query_request.top_k
+            top_k=query_request.top_k,
+            history=query_request.history,
         )
         
-        # Extract plain text contexts from sources
-        contexts = [source.excerpt for source in response.sources[:query_request.top_k]]
+        # Extract plain text contexts from sources (full chunk text for RAGAS faithfulness)
+        contexts = [source.excerpt for source in response.sources[:query_request.top_k]] if response.sources else []
         
         # Return competition-compliant format with optional extended fields
         return QueryResponse(
@@ -260,7 +253,7 @@ async def stats_endpoint():
             "vector_store": stats,
             "rag_config": {
                 "llm_model": rag_pipeline.model_name if rag_pipeline else "N/A",
-                "llm_provider": rag_pipeline.llm_provider.value if rag_pipeline else "N/A",
+                "llm_provider": "gemini",
                 "top_k": settings.top_k_documents,
                 "confidence_threshold": settings.retrieval_confidence_threshold,
                 "temperature": settings.llm_temperature

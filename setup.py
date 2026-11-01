@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Complete setup script for MedSource RAG Chatbot
 Run this script to set up everything automatically
@@ -115,7 +115,7 @@ def test_api():
     
     print("🎉 MedSource is ready to use!\n")
     print("Next steps:")
-    print("1. Edit .env file and add your OpenAI API key (or set LLM_PROVIDER=mistral)")
+    print("1. Edit .env file and add your GEMINI_API_KEY (get a free key at aistudio.google.com/apikey)")
     print("   nano .env")
     print("\n2. Start the API server:")
     print("   python -m src.api")

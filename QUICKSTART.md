@@ -1,263 +1,170 @@
-# 🚀 Quick Start Guide - MedSource
+﻿# Quick Start — MedSource RAG Chatbot
 
-This guide will get you up and running with MedSource in under 10 minutes!
+Get the chatbot running locally in under 10 minutes.
 
-## 📋 Prerequisites
+---
 
-- Python 3.8+ installed
-- Git installed
-- OpenAI API key (or plan to use open-source LLMs)
+## Prerequisites
 
-## ⚡ Installation (5 minutes)
+- Python 3.11+
+- A free [Google AI Studio](https://aistudio.google.com/apikey) account (for the Gemini API key — no billing required)
+- Git
 
-### Step 1: Clone and Setup
+---
+
+## Step 1 — Clone and install
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/MedSource-rag-chatbot.git
+git clone https://github.com/YOUR_GITHUB_USERNAME/MedSource-rag-chatbot.git
 cd MedSource-rag-chatbot
 
-# Create virtual environment
 python -m venv venv
+venv\Scripts\activate          # Windows
+# source venv/bin/activate     # macOS / Linux
 
-# Activate it
-# On macOS/Linux:
-source venv/bin/activate
-# On Windows:
-# venv\Scripts\activate
-
-# Install dependencies
 pip install -r requirements.txt
 ```
 
-### Step 2: Configure Environment
+---
+
+## Step 2 — Configure environment
 
 ```bash
-# Copy example environment file
 cp .env.example .env
-
-# Edit .env and add your API key
-nano .env  # or use any text editor
 ```
 
-**Option A: Using OpenAI (Recommended for hackathon)**
-```bash
-OPENAI_API_KEY=sk-your-actual-api-key-here
-LLM_PROVIDER=openai
+Open `.env` and set the minimum required fields:
+
+```env
+GEMINI_API_KEY=your-gemini-key-here
+LLM_MODEL=gemini-2.0-flash
 ```
 
-**Option B: Using Mistral (Open Source, Free)**
+Get a free key (no billing) at [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
+
+Everything else has a sensible default. See [`.env.example`](.env.example) for the full list.
+
+---
+
+## Step 3 — Build the knowledge base
+
+The chatbot needs indexed medical documents before it can answer questions.
+
+**Option A — Quick start with PubMed abstracts (recommended)**
 ```bash
-LLM_PROVIDER=mistral
-# No API key needed, runs locally!
+python scripts/ingest_data.py --source pubmed \
+  --pubmed-queries "diabetes management" "hypertension treatment" \
+                   "asthma" "anemia" "depression"
+```
+This fetches ~100 real research abstracts per query from NCBI's free API.
+
+**Option B — Add local files**
+
+Place PDF, DOCX, TXT, or JSON files in `data/raw_documents/`, then:
+```bash
+python scripts/ingest_data.py --source local
 ```
 
-**Option C: Using Qwen (Open Source, Free)**
+**Option C — Full bootstrap (all public sources, takes ~10 min)**
 ```bash
-LLM_PROVIDER=qwen
-# No API key needed, runs locally!
+python scripts/bootstrap_data.py
 ```
+This pulls PubMed + WHO + MedlinePlus + FDA drug labels + ClinicalTrials.
 
-### Step 3: Ingest Sample Data
+Ingestion is safe to run in multiple batches — it always **appends** to the existing index.
 
-```bash
-# This creates sample medical documents and builds the vector store
-python scripts/ingest_data.py --source sample
+---
 
-# Expected output:
-# ✅ Created 6 sample documents
-# ✅ Vector store created successfully!
-# Total chunks: 124
-```
-
-### Step 4: Start the API Server
+## Step 4 — Start the server
 
 ```bash
+# FastAPI backend only
 python -m src.api
+# API docs at http://localhost:8000/docs
 
-# Expected output:
-# 🚀 Starting MedSource Medical RAG Chatbot
-# 📚 Loading vector store...
-# ✅ Vector store loaded successfully
-#    - Total chunks: 124
-#    - Unique documents: 6
-# 🤖 Initializing RAG pipeline...
-# ✅ RAG pipeline initialized successfully
-# 🎯 API Server ready at http://0.0.0.0:8000
+# Or the full Streamlit chat UI (opens a browser tab)
+streamlit run streamlit_app.py
 ```
 
-Server is now running! Keep this terminal open.
+---
 
-## 🧪 Test It (3 minutes)
-
-### Option 1: Using curl (Terminal)
-
-Open a **new terminal** and run:
+## Step 5 — Test it
 
 ```bash
 curl -X POST http://localhost:8000/query \
   -H "Content-Type: application/json" \
-  -d '{
-    "question": "What are the symptoms of vitamin D deficiency?",
-    "top_k": 5,
-    "include_sources": true
-  }'
+  -d '{"query": "What are the symptoms of anaemia?", "top_k": 5}'
 ```
 
-### Option 2: Using Python
-
-```python
-import requests
-
-response = requests.post(
-    "http://localhost:8000/query",
-    json={
-        "question": "What are the symptoms of anemia?",
-        "top_k": 5,
-        "include_sources": True
-    }
-)
-
-print(response.json()["answer"])
-```
-
-### Option 3: Using the Test Script
-
-```bash
-python scripts/test_api.py
-```
-
-### Option 4: Browser (Interactive Docs)
-
-Open your browser and go to:
-```
-http://localhost:8000/docs
-```
-
-This opens Swagger UI where you can test all endpoints interactively!
-
-## 📊 Expected Response
-
-You should see something like:
+Expected response shape:
 
 ```json
 {
-  "question": "What are the symptoms of vitamin D deficiency?",
-  "answer": "Common symptoms include fatigue, bone pain, muscle weakness, and mood changes [DOC_1]. Prolonged deficiency can lead to rickets in children or osteomalacia in adults [DOC_1]...",
+  "answer": "Anaemia is characterised by fatigue, pallor, and shortness of breath [DOC_1]...",
+  "contexts": ["...retrieved passage text..."],
   "sources": [
     {
       "doc_id": "DOC_1",
-      "title": "Vitamin D Deficiency: Symptoms and Treatment",
-      "year": "2018",
-      "relevance_score": 0.89,
-      "excerpt": "Vitamin D deficiency is a common condition..."
+      "title": "Iron-Deficiency Anaemia — PubMed 38291234",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/38291234/",
+      "relevance_score": 0.74
     }
   ],
-  "confidence": 0.89,
-  "retrieval_time_ms": 45.2,
-  "generation_time_ms": 1823.5,
-  "total_time_ms": 1868.7
+  "confidence": 0.74,
+  "retrieval_time_ms": 18.4,
+  "generation_time_ms": 3210.0,
+  "total_time_ms": 3228.4,
+  "warning": "Always consult with qualified healthcare professionals for medical decisions."
 }
 ```
 
-## 🎯 Next Steps
-
-### Add More Medical Data
-
-**Option 1: Add your own PDF/DOCX files**
+If `CHATBOT_API_KEY` is set in `.env`, add the header:
 ```bash
-# Place medical documents in this folder:
-mkdir -p data/raw_documents
-# Copy your PDFs, DOCX, TXT files there
-
-# Re-run ingestion
-python scripts/ingest_data.py --source local
+-H "X-API-Key: your-chatbot-api-key"
 ```
 
-**Option 2: Fetch from PubMed**
-```bash
-python scripts/ingest_data.py --source pubmed \
-  --pubmed-queries "diabetes treatment" "hypertension management" "cancer therapy"
-```
+---
 
-**Option 3: Use all sources**
-```bash
-python scripts/ingest_data.py --source all \
-  --pubmed-queries "common medical conditions" "preventive medicine"
-```
-
-### Run Evaluation
+## Run the smoke test suite
 
 ```bash
-# Test query
-curl -X POST http://localhost:8000/evaluate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "questions": [
-      "What are the symptoms of anemia?",
-      "How is diabetes managed?"
-    ]
-  }'
+python _test_run.py
 ```
 
-### Deploy to Production
+32 checks, no API key or vector store required. All should pass.
 
-See [DEPLOYMENT.md](deployment/DEPLOYMENT.md) for detailed deployment instructions.
+---
 
-Quick options:
-- **Render**: `git push` and it auto-deploys
-- **Railway**: `railway up`
-- **Docker**: `docker-compose up`
+## Troubleshooting
 
-## 🆘 Troubleshooting
+| Symptom | Fix |
+|---|---|
+| `Vector store not found` | Run Step 3 first |
+| `GEMINI_API_KEY not set` | Add key to `.env` |
+| `422 Unprocessable Entity` | Check JSON field names — use `query`, not `question` |
+| `401 Unauthorized` | Add `X-API-Key` header, or leave `CHATBOT_API_KEY` blank to disable auth |
+| Port 8000 in use | Set `API_PORT=8001` in `.env` |
+| OpenMP crash on macOS M1/M2/M3 | Use `bash scripts/safe_start_api.sh` instead |
+| Slow first response (3–5 s) | Normal on Gemini free tier — model load + generation |
 
-### "Vector store not found"
+---
+
+## macOS Apple Silicon
+
+If you hit `OMP: Error #15` or threading crashes:
+
 ```bash
-# Run ingestion first
-python scripts/ingest_data.py --source sample
+bash scripts/safe_ingest.sh --source pubmed   # instead of python scripts/ingest_data.py
+bash scripts/safe_start_api.sh               # instead of python -m src.api
 ```
 
-### "OpenAI API key not set"
-```bash
-# Add to .env file
-echo "OPENAI_API_KEY=sk-your-key" >> .env
+These set `OMP_NUM_THREADS=1` to avoid the known PyTorch/OpenBLAS conflict on M-series chips.
 
-# Or use open-source model
-echo "LLM_PROVIDER=mistral" >> .env
-```
+---
 
-### "Port 8000 already in use"
-```bash
-# Change port in .env
-echo "API_PORT=8001" >> .env
-```
+## Next steps
 
-### "Out of memory" (with Mistral/Qwen)
-```bash
-# Use OpenAI instead (cloud-based)
-echo "LLM_PROVIDER=openai" >> .env
-```
-
-### Import errors
-```bash
-# Reinstall dependencies
-pip install --upgrade -r requirements.txt
-```
-
-## 📞 Need Help?
-
-- **API Docs**: http://localhost:8000/docs
-- **Health Check**: http://localhost:8000/health
-- **GitHub Issues**: [Create an issue](https://github.com/yourusername/MedSource-rag-chatbot/issues)
-
-## 🎉 You're Ready!
-
-You now have a fully functional medical RAG chatbot running locally!
-
-For hackathon submission, you'll need to:
-1. ✅ Deploy the API (Render/Railway)
-2. ✅ Get the public endpoint URL
-3. ✅ Run RAGAS evaluation
-4. ✅ Submit: API URL + Documentation
-
-Good luck! 🚀
+- **Streamlit UI** — `streamlit run streamlit_app.py` has a full data-ingestion panel with 8 source types
+- **RAGAS evaluation** — `python scripts/run_ragas_eval.py` scores faithfulness + answer relevance
+- **Deploy to Render** — see [`DEPLOYMENT.md`](DEPLOYMENT.md)
+- **Tune retrieval** — adjust `RETRIEVAL_CONFIDENCE_THRESHOLD`, `TOP_K_DOCUMENTS`, and try enabling `ENABLE_RERANKER=true`

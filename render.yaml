@@ -1,4 +1,4 @@
-services:
+﻿services:
   - type: web
     name: MedSource-rag-api
     env: python
@@ -11,17 +11,25 @@ services:
       pip install --upgrade pip
       pip install -r requirements.txt
       bash scripts/download_vector_store.sh || echo "No vector store URL provided, will need manual upload"
-    startCommand: gunicorn src.api:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 120
+    # Single worker: avoids FAISS shared-memory races and stays within the
+    # 512 MB RAM limit on Render free tier.
+    startCommand: gunicorn src.api:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 120
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
-        value: "3.11.9"
+        value: "3.11"
       - key: VECTOR_STORE_URL
-        sync: false  # Add this manually in Render dashboard
+        sync: false
       - key: GEMINI_API_KEY
-        value: AIzaSyCEcVyJeeQztcxbG-ekdheNh_4tMN9z0P0
+        sync: false
+      # Key callers must send in X-API-Key header. Leave blank to disable auth.
+      - key: CHATBOT_API_KEY
+        sync: false
+      # Comma-separated list of allowed frontend origins (CORS).
+      - key: ALLOWED_ORIGINS
+        sync: false
       - key: EMBEDDING_MODEL
-        value: sentence-transformers/all-MiniLM-L6-v2
+        value: BAAI/bge-base-en-v1.5
       - key: LLM_MODEL
         value: gemini-2.0-flash
       - key: LLM_PROVIDER
@@ -37,14 +45,14 @@ services:
       - key: VECTOR_STORE_PATH
         value: ./data/vector_store
       - key: CHUNK_SIZE
-        value: "500"
+        value: "256"
       - key: CHUNK_OVERLAP
-        value: "50"
+        value: "40"
+      - key: EMBEDDING_BATCH_SIZE
+        value: "32"
       - key: OMP_NUM_THREADS
         value: "1"
       - key: OPENBLAS_NUM_THREADS
         value: "1"
       - key: VECLIB_MAXIMUM_THREADS
         value: "1"
-      - key: PYTHON_VERSION
-        value: "3.11"

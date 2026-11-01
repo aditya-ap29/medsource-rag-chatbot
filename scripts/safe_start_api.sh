@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/bin/bash
 
 # Safe API startup script that prevents OpenMP/threading conflicts
 # on macOS ARM architecture
@@ -27,7 +27,7 @@ echo ""
 source venv/bin/activate
 
 # Start the API server
-echo "🚀 Starting MedSource RAG API..."
+echo "Starting MedSource RAG API..."
 echo "   API will be available at: http://localhost:8000"
 echo "   Docs available at: http://localhost:8000/docs"
 echo ""

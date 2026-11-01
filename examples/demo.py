@@ -1,78 +1,71 @@
+﻿"""
+Minimal demo — query the MedSource FastAPI backend via HTTP.
+
+Prerequisites:
+  1. Server running:  python -m src.api
+  2. .env configured: GEMINI_API_KEY and (optionally) CHATBOT_API_KEY
+
+Usage:
+  python examples/demo.py
 """
-Example usage of MedSource RAG Chatbot
-"""
+import os
 import sys
 from pathlib import Path
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 import requests
-import json
+from dotenv import load_dotenv
+
+# Load .env so CHATBOT_API_KEY is available
+sys.path.insert(0, str(Path(__file__).parent.parent))
+load_dotenv()
+
+API_URL = "http://localhost:8000"
+API_KEY = os.getenv("CHATBOT_API_KEY", "")   # blank = auth disabled
+
+HEADERS = {"Content-Type": "application/json"}
+if API_KEY:
+    HEADERS["X-API-Key"] = API_KEY
+
+QUESTIONS = [
+    "What are the symptoms of anaemia?",
+    "How is type 2 diabetes managed?",
+    "What are the risk factors for hypertension?",
+]
+
+
+def query(question: str, top_k: int = 3) -> dict:
+    resp = requests.post(
+        f"{API_URL}/query",
+        json={"query": question, "top_k": top_k},
+        headers=HEADERS,
+        timeout=60,
+    )
+    resp.raise_for_status()
+    return resp.json()
 
 
 def main():
-    """Demonstrate MedSource usage"""
-    
-    # API endpoint
-    api_url = "http://localhost:8000/query"
-    
-    # Medical questions to ask
-    questions = [
-        "What are the symptoms of anemia?",
-        "How is vitamin D deficiency treated?",
-        "What are the risk factors for hypertension?",
-    ]
-    
-    print("🏥 MedSource - Medical RAG Chatbot Demo")
-    print("="*60 + "\n")
-    
-    for i, question in enumerate(questions, 1):
-        print(f"\n[Query {i}] {question}")
+    # Health check
+    health = requests.get(f"{API_URL}/health", timeout=10).json()
+    print(f"Service: {health['status']} | KB loaded: {health['vector_store_loaded']}\n")
+
+    for i, question in enumerate(QUESTIONS, 1):
+        print(f"[{i}] {question}")
         print("-" * 60)
-        
-        # Make API request
-        response = requests.post(
-            api_url,
-            json={
-                "question": question,
-                "top_k": 3,
-                "include_sources": True
-            }
-        )
-        
-        if response.status_code == 200:
-            data = response.json()
-            
-            # Print answer
-            print(f"\n{data['answer']}\n")
-            
-            # Print metadata
-            print(f"💡 Confidence: {data['confidence']:.2%}")
-            print(f"⏱️  Response Time: {data['total_time_ms']:.0f}ms")
-            print(f"📚 Sources Used: {len(data['sources'])}")
-            
-            # Print sources
-            print("\n📖 References:")
-            for source in data['sources']:
-                print(f"   • {source['title']} ({source.get('year', 'N/A')})")
-                print(f"     Relevance: {source['relevance_score']:.2%}")
-                if source.get('url'):
-                    print(f"     {source['url']}")
-        else:
-            print(f"❌ Error: {response.status_code}")
-        
-        print("\n" + "="*60)
+        data = query(question)
+        print(data["answer"][:500])
+        print(f"\nConfidence : {data.get('confidence', 0):.2%}")
+        print(f"Sources    : {len(data.get('sources') or [])}")
+        print(f"Total time : {data.get('total_time_ms', 0):.0f} ms")
+        print("=" * 60 + "\n")
 
 
 if __name__ == "__main__":
     try:
         main()
     except requests.exceptions.ConnectionError:
-        print("❌ Error: Could not connect to MedSource API")
-        print("Make sure the server is running:")
-        print("  python -m src.api")
+        print("Could not connect. Start the server first:  python -m src.api")
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP error: {e.response.status_code} — {e.response.text}")
     except KeyboardInterrupt:
-        print("\n\nDemo interrupted by user")
-    except Exception as e:
-        print(f"❌ Error: {e}")
+        pass
